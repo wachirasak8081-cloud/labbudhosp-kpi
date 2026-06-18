@@ -43,10 +43,9 @@ export const seedDefaultAdmin = createServerFn({ method: "POST" }).handler(async
     .from("profiles")
     .upsert({ id: user.id, full_name: ADMIN_NAME, is_active: true }, { onConflict: "id" });
 
-  // Ensure admin role (trigger inserts 'staff' by default; add admin too)
-  await supabaseAdmin
-    .from("user_roles")
-    .upsert({ user_id: user.id, role: "admin" }, { onConflict: "user_id,role" });
+  // Replace any default trigger role with admin only
+  await supabaseAdmin.from("user_roles").delete().eq("user_id", user.id);
+  await supabaseAdmin.from("user_roles").insert({ user_id: user.id, role: "admin" });
 
   return { ok: true, seeded: true };
 });
