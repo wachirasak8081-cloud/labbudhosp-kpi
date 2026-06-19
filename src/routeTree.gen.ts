@@ -13,13 +13,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedMeasurementsRouteImport } from './routes/_authenticated/measurements'
 import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
+import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCapaRouteImport } from './routes/_authenticated/capa'
-import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
-import { Route as AuthenticatedAdminDepartmentsRouteImport } from './routes/_authenticated/admin.departments'
-import { Route as AuthenticatedAdminAuditLogsRouteImport } from './routes/_authenticated/admin.audit-logs'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedIndicatorsIndexRouteImport } from './routes/_authenticated/indicators.index'
+import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
+import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
+import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
+import { Route as AuthenticatedIndicatorsImportRouteImport } from './routes/_authenticated/indicators.import'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -40,15 +43,14 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMeasurementsRoute =
-  AuthenticatedMeasurementsRouteImport.update({
-    id: '/measurements',
-    path: '/measurements',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedIndicatorsRoute = AuthenticatedIndicatorsRouteImport.update({
   id: '/indicators',
   path: '/indicators',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDataEntryRoute = AuthenticatedDataEntryRouteImport.update({
+  id: '/data-entry',
+  path: '/data-entry',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -61,22 +63,41 @@ const AuthenticatedCapaRoute = AuthenticatedCapaRouteImport.update({
   path: '/capa',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
-  id: '/admin/users',
-  path: '/admin/users',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminDepartmentsRoute =
-  AuthenticatedAdminDepartmentsRouteImport.update({
-    id: '/admin/departments',
-    path: '/admin/departments',
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAuditLogsRoute =
-  AuthenticatedAdminAuditLogsRouteImport.update({
-    id: '/admin/audit-logs',
-    path: '/admin/audit-logs',
+const AuthenticatedIndicatorsIndexRoute =
+  AuthenticatedIndicatorsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedIndicatorsRoute,
+  } as any)
+const AuthenticatedSettingsUsersRoute =
+  AuthenticatedSettingsUsersRouteImport.update({
+    id: '/settings/users',
+    path: '/settings/users',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsDepartmentsRoute =
+  AuthenticatedSettingsDepartmentsRouteImport.update({
+    id: '/settings/departments',
+    path: '/settings/departments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsAuditLogsRoute =
+  AuthenticatedSettingsAuditLogsRouteImport.update({
+    id: '/settings/audit-logs',
+    path: '/settings/audit-logs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIndicatorsImportRoute =
+  AuthenticatedIndicatorsImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedIndicatorsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -84,24 +105,29 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/capa': typeof AuthenticatedCapaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/indicators': typeof AuthenticatedIndicatorsRoute
-  '/measurements': typeof AuthenticatedMeasurementsRoute
+  '/data-entry': typeof AuthenticatedDataEntryRoute
+  '/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
-  '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
-  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
+  '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
+  '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/indicators/': typeof AuthenticatedIndicatorsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/capa': typeof AuthenticatedCapaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/indicators': typeof AuthenticatedIndicatorsRoute
-  '/measurements': typeof AuthenticatedMeasurementsRoute
+  '/data-entry': typeof AuthenticatedDataEntryRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
-  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
+  '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
+  '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/indicators': typeof AuthenticatedIndicatorsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,12 +136,15 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/capa': typeof AuthenticatedCapaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/indicators': typeof AuthenticatedIndicatorsRoute
-  '/_authenticated/measurements': typeof AuthenticatedMeasurementsRoute
+  '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
+  '/_authenticated/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/_authenticated/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
-  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/indicators/import': typeof AuthenticatedIndicatorsImportRoute
+  '/_authenticated/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
+  '/_authenticated/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/_authenticated/indicators/': typeof AuthenticatedIndicatorsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -124,24 +153,29 @@ export interface FileRouteTypes {
     | '/auth'
     | '/capa'
     | '/dashboard'
+    | '/data-entry'
     | '/indicators'
-    | '/measurements'
     | '/reports'
-    | '/admin/audit-logs'
-    | '/admin/departments'
-    | '/admin/users'
+    | '/indicators/import'
+    | '/settings/audit-logs'
+    | '/settings/departments'
+    | '/settings/users'
+    | '/indicators/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/capa'
     | '/dashboard'
-    | '/indicators'
-    | '/measurements'
+    | '/data-entry'
     | '/reports'
-    | '/admin/audit-logs'
-    | '/admin/departments'
-    | '/admin/users'
+    | '/indicators/import'
+    | '/settings/audit-logs'
+    | '/settings/departments'
+    | '/settings/users'
+    | '/indicators'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -149,12 +183,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/capa'
     | '/_authenticated/dashboard'
+    | '/_authenticated/data-entry'
     | '/_authenticated/indicators'
-    | '/_authenticated/measurements'
     | '/_authenticated/reports'
-    | '/_authenticated/admin/audit-logs'
-    | '/_authenticated/admin/departments'
-    | '/_authenticated/admin/users'
+    | '/_authenticated/indicators/import'
+    | '/_authenticated/settings/audit-logs'
+    | '/_authenticated/settings/departments'
+    | '/_authenticated/settings/users'
+    | '/_authenticated/indicators/'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -193,18 +230,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/measurements': {
-      id: '/_authenticated/measurements'
-      path: '/measurements'
-      fullPath: '/measurements'
-      preLoaderRoute: typeof AuthenticatedMeasurementsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/indicators': {
       id: '/_authenticated/indicators'
       path: '/indicators'
       fullPath: '/indicators'
       preLoaderRoute: typeof AuthenticatedIndicatorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/data-entry': {
+      id: '/_authenticated/data-entry'
+      path: '/data-entry'
+      fullPath: '/data-entry'
+      preLoaderRoute: typeof AuthenticatedDataEntryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -221,50 +258,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCapaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/users': {
-      id: '/_authenticated/admin/users'
-      path: '/admin/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/departments': {
-      id: '/_authenticated/admin/departments'
-      path: '/admin/departments'
-      fullPath: '/admin/departments'
-      preLoaderRoute: typeof AuthenticatedAdminDepartmentsRouteImport
+    '/_authenticated/indicators/': {
+      id: '/_authenticated/indicators/'
+      path: '/'
+      fullPath: '/indicators/'
+      preLoaderRoute: typeof AuthenticatedIndicatorsIndexRouteImport
+      parentRoute: typeof AuthenticatedIndicatorsRoute
+    }
+    '/_authenticated/settings/users': {
+      id: '/_authenticated/settings/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/audit-logs': {
-      id: '/_authenticated/admin/audit-logs'
-      path: '/admin/audit-logs'
-      fullPath: '/admin/audit-logs'
-      preLoaderRoute: typeof AuthenticatedAdminAuditLogsRouteImport
+    '/_authenticated/settings/departments': {
+      id: '/_authenticated/settings/departments'
+      path: '/settings/departments'
+      fullPath: '/settings/departments'
+      preLoaderRoute: typeof AuthenticatedSettingsDepartmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/audit-logs': {
+      id: '/_authenticated/settings/audit-logs'
+      path: '/settings/audit-logs'
+      fullPath: '/settings/audit-logs'
+      preLoaderRoute: typeof AuthenticatedSettingsAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/indicators/import': {
+      id: '/_authenticated/indicators/import'
+      path: '/import'
+      fullPath: '/indicators/import'
+      preLoaderRoute: typeof AuthenticatedIndicatorsImportRouteImport
+      parentRoute: typeof AuthenticatedIndicatorsRoute
     }
   }
 }
 
+interface AuthenticatedIndicatorsRouteChildren {
+  AuthenticatedIndicatorsImportRoute: typeof AuthenticatedIndicatorsImportRoute
+  AuthenticatedIndicatorsIndexRoute: typeof AuthenticatedIndicatorsIndexRoute
+}
+
+const AuthenticatedIndicatorsRouteChildren: AuthenticatedIndicatorsRouteChildren =
+  {
+    AuthenticatedIndicatorsImportRoute: AuthenticatedIndicatorsImportRoute,
+    AuthenticatedIndicatorsIndexRoute: AuthenticatedIndicatorsIndexRoute,
+  }
+
+const AuthenticatedIndicatorsRouteWithChildren =
+  AuthenticatedIndicatorsRoute._addFileChildren(
+    AuthenticatedIndicatorsRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCapaRoute: typeof AuthenticatedCapaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedIndicatorsRoute: typeof AuthenticatedIndicatorsRoute
-  AuthenticatedMeasurementsRoute: typeof AuthenticatedMeasurementsRoute
+  AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
+  AuthenticatedIndicatorsRoute: typeof AuthenticatedIndicatorsRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedAdminAuditLogsRoute: typeof AuthenticatedAdminAuditLogsRoute
-  AuthenticatedAdminDepartmentsRoute: typeof AuthenticatedAdminDepartmentsRoute
-  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedSettingsAuditLogsRoute: typeof AuthenticatedSettingsAuditLogsRoute
+  AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
+  AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCapaRoute: AuthenticatedCapaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedIndicatorsRoute: AuthenticatedIndicatorsRoute,
-  AuthenticatedMeasurementsRoute: AuthenticatedMeasurementsRoute,
+  AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
+  AuthenticatedIndicatorsRoute: AuthenticatedIndicatorsRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedAdminAuditLogsRoute: AuthenticatedAdminAuditLogsRoute,
-  AuthenticatedAdminDepartmentsRoute: AuthenticatedAdminDepartmentsRoute,
-  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedSettingsAuditLogsRoute: AuthenticatedSettingsAuditLogsRoute,
+  AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
+  AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

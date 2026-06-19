@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Pencil, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/measurements")({
+export const Route = createFileRoute("/_authenticated/data-entry")({
   component: MeasurementsPage,
 });
 

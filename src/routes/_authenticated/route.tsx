@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "
 import { useEffect } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { FiscalYearProvider } from "@/hooks/use-fiscal-year";
 import { FiscalYearSelector } from "@/components/fiscal-year-selector";
@@ -45,8 +46,11 @@ function AuthLayout() {
           <SidebarInset>
             <header className="h-14 sticky top-0 z-30 flex items-center gap-3 border-b bg-background/95 backdrop-blur px-4">
               <SidebarTrigger />
-              <h1 className="text-base font-semibold">{title}</h1>
-              <div className="ml-auto"><FiscalYearSelector /></div>
+              <h1 className="text-base font-semibold truncate">{title}</h1>
+              <div className="ml-auto flex items-center gap-2">
+                <FiscalYearSelector />
+                <UserMenu />
+              </div>
             </header>
             <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/30">
               <Outlet />
@@ -60,12 +64,14 @@ function AuthLayout() {
 
 function pageTitle(path: string): string {
   if (path.startsWith("/dashboard")) return "แดชบอร์ดภาพรวม";
-  if (path.startsWith("/indicators")) return "ตัวชี้วัด KPI / QI";
-  if (path.startsWith("/measurements")) return "บันทึกผลวัด";
+  if (path.startsWith("/indicators/import")) return "นำเข้าตัวชี้วัดจาก Excel";
+  if (path.startsWith("/indicators")) return "จัดการตัวชี้วัด";
+  if (path.startsWith("/data-entry")) return "บันทึกข้อมูล";
   if (path.startsWith("/capa")) return "แผนแก้ไข (CAPA / CQI)";
   if (path.startsWith("/reports")) return "รายงานสรุป";
-  if (path.startsWith("/admin/users")) return "จัดการผู้ใช้งาน";
-  if (path.startsWith("/admin/departments")) return "จัดการสาขางาน";
-  if (path.startsWith("/admin/audit-logs")) return "ประวัติการเปลี่ยนแปลง";
+  if (path.startsWith("/settings/users")) return "จัดการผู้ใช้งาน";
+  if (path.startsWith("/settings/departments")) return "จัดการสาขางาน";
+  if (path.startsWith("/settings/audit-logs")) return "ประวัติการเปลี่ยนแปลง";
+  if (path.startsWith("/settings")) return "ตั้งค่าระบบ";
   return "ระบบ KPI / QI";
 }

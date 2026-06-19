@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/audit-logs")({
+export const Route = createFileRoute("/_authenticated/settings/audit-logs")({
   component: AuditPage,
 });
 
