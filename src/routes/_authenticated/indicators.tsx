@@ -92,13 +92,23 @@ function IndicatorsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">โครงสร้างตัวชี้วัดแบบลำดับชั้น (Objective → KPI → QI → SubQI)</p>
-        {canEdit && (
-          <Button onClick={() => { setEditing(null); setParentFor(null); setCreating(true); }}>
-            <Plus className="w-4 h-4 mr-2" />เพิ่มตัวชี้วัด
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-sm text-muted-foreground">โครงสร้างตัวชี้วัดแบบลำดับชั้น (Objective → KPI → QI → Sub-QI)</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="w-4 h-4 mr-2" />ส่งออก Excel
           </Button>
-        )}
+          {canEdit && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/indicators/import"><Upload className="w-4 h-4 mr-2" />นำเข้า Excel</Link>
+            </Button>
+          )}
+          {canEdit && (
+            <Button size="sm" onClick={() => { setEditing(null); setParentFor(null); setCreating(true); }}>
+              <Plus className="w-4 h-4 mr-2" />เพิ่มตัวชี้วัด
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -112,6 +122,7 @@ function IndicatorsPage() {
                   onEdit={(i) => { setEditing(i); setCreating(false); }}
                   onAddChild={(i) => { setParentFor(i); setEditing(null); setCreating(true); }}
                   onDelete={(i) => { if (confirm(`ลบ "${i.name_th}" ?`)) deleteMut.mutate(i.id); }}
+                  onToggle={(i) => toggleMut.mutate(i)}
                 />
               ))}
             </div>
