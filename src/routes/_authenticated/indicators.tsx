@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Plus, Pencil, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { ChevronRight, Plus, Pencil, Trash2, Loader2, ExternalLink, Upload, Download, Power } from "lucide-react";
 import { toast } from "sonner";
+import { exportIndicators } from "@/lib/indicators-xlsx";
 
 export const Route = createFileRoute("/_authenticated/indicators")({
   component: IndicatorsPage,

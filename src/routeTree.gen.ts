@@ -17,6 +17,7 @@ import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCapaRouteImport } from './routes/_authenticated/capa'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
 import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
 import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
@@ -60,6 +61,12 @@ const AuthenticatedCapaRoute = AuthenticatedCapaRouteImport.update({
   path: '/capa',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsUsersRoute =
   AuthenticatedSettingsUsersRouteImport.update({
     id: '/settings/users',
@@ -90,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +110,7 @@ export interface FileRoutesByTo {
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +125,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/_authenticated/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/settings/audit-logs'
     | '/settings/departments'
     | '/settings/users'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/settings/audit-logs'
     | '/settings/departments'
     | '/settings/users'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -155,6 +167,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/audit-logs'
     | '/_authenticated/settings/departments'
     | '/_authenticated/settings/users'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCapaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/users': {
       id: '/_authenticated/settings/users'
       path: '/settings/users'
@@ -254,6 +274,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsAuditLogsRoute: typeof AuthenticatedSettingsAuditLogsRoute
   AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
   AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -265,6 +286,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsAuditLogsRoute: AuthenticatedSettingsAuditLogsRoute,
   AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
   AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
