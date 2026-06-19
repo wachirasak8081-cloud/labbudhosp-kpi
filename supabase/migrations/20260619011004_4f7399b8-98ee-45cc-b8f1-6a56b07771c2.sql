@@ -1,0 +1,1 @@
+ALTER TABLE public.indicators ADD CONSTRAINT indicators_code_key UNIQUE (code);
