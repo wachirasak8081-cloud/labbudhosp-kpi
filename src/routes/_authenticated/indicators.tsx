@@ -38,7 +38,7 @@ function IndicatorsPage() {
     queryFn: async () => {
       const [{ data: inds }, { data: depts }] = await Promise.all([
         supabase.from("indicators").select("*").order("sort_order").order("code"),
-        supabase.from("departments").select("id, name_th"),
+        supabase.from("departments").select("id, name_th, code"),
       ]);
       return { inds: (inds ?? []) as Indicator[], depts: depts ?? [] };
     },
@@ -46,6 +46,8 @@ function IndicatorsPage() {
 
   const tree = useMemo(() => buildTree(data?.inds ?? []), [data]);
   const deptMap = useMemo(() => new Map((data?.depts ?? []).map((d) => [d.id, d.name_th])), [data]);
+  const deptCodeMap = useMemo(() => new Map((data?.depts ?? []).map((d) => [d.id, (d as { code?: string }).code ?? null])), [data]);
+  const codeMap = useMemo(() => new Map((data?.inds ?? []).map((i) => [i.id, i.code])), [data]);
 
   const [editing, setEditing] = useState<Indicator | null>(null);
   const [creating, setCreating] = useState(false);
@@ -59,6 +61,32 @@ function IndicatorsPage() {
     onSuccess: () => { toast.success("ลบตัวชี้วัดแล้ว"); qc.invalidateQueries({ queryKey: ["indicators-all"] }); },
     onError: (e) => toast.error("ลบไม่สำเร็จ: " + e.message),
   });
+
+  const toggleMut = useMutation({
+    mutationFn: async (i: Indicator) => {
+      const { error } = await supabase.from("indicators").update({ is_active: !i.is_active }).eq("id", i.id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, i) => { toast.success(i.is_active ? "ปิดใช้งานแล้ว" : "เปิดใช้งานแล้ว"); qc.invalidateQueries({ queryKey: ["indicators-all"] }); },
+    onError: (e) => toast.error("ไม่สำเร็จ: " + e.message),
+  });
+
+  const handleExport = () => {
+    const items = (data?.inds ?? []).map((i) => ({
+      level: i.level,
+      parent_code: i.parent_id ? codeMap.get(i.parent_id) ?? null : null,
+      code: i.code, name_th: i.name_th,
+      formula_description: i.formula_description, formula_link: i.formula_link,
+      numerator_description: i.numerator_description, denominator_description: i.denominator_description,
+      target_value: i.target_value, target_condition: i.target_condition,
+      unit: i.unit, frequency: i.frequency,
+      is_leaf: i.is_leaf, is_inverted: i.is_inverted,
+      department_code: i.department_id ? deptCodeMap.get(i.department_id) ?? null : null,
+      sort_order: i.sort_order,
+    }));
+    exportIndicators(items);
+    toast.success(`ส่งออก ${items.length} รายการแล้ว`);
+  };
 
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
