@@ -159,42 +159,49 @@ function buildTree(items: Indicator[]): Node[] {
 const LEVEL_LABEL = { object: "Objective", kpi: "KPI", qi: "QI", subqi: "Sub-QI" } as const;
 const LEVEL_COLOR = { object: "bg-primary text-primary-foreground", kpi: "bg-success text-success-foreground", qi: "bg-accent text-accent-foreground", subqi: "bg-secondary text-secondary-foreground" } as const;
 
-function IndicatorNode({ node, deptMap, canEdit, onEdit, onAddChild, onDelete, depth = 0 }: {
+function IndicatorNode({ node, deptMap, canEdit, onEdit, onAddChild, onDelete, onToggle, depth = 0 }: {
   node: Node; deptMap: Map<string, string>; canEdit: boolean;
-  onEdit: (i: Indicator) => void; onAddChild: (i: Indicator) => void; onDelete: (i: Indicator) => void;
+  onEdit: (i: Indicator) => void; onAddChild: (i: Indicator) => void;
+  onDelete: (i: Indicator) => void; onToggle: (i: Indicator) => void;
   depth?: number;
 }) {
   const [open, setOpen] = useState(true);
   const i = node.ind;
   const hasKids = node.children.length > 0;
+  const freqLabel = i.frequency === "yearly" ? "รายปี" : i.frequency === "monthly" ? "รายเดือน" : null;
 
   return (
     <div>
-      <div className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-muted/60 group" style={{ paddingLeft: `${depth * 20 + 8}px` }}>
+      <div className={`flex items-center gap-2 py-2 px-2 rounded-md hover:bg-muted/60 group ${i.is_active ? "" : "opacity-60"}`} style={{ paddingLeft: `${depth * 20 + 8}px` }}>
         <button onClick={() => setOpen((v) => !v)} className="w-5 h-5 flex items-center justify-center text-muted-foreground" disabled={!hasKids}>
           {hasKids && <ChevronRight className={`w-4 h-4 transition-transform ${open ? "rotate-90" : ""}`} />}
         </button>
         <Badge className={LEVEL_COLOR[i.level] + " text-xs shrink-0"}>{LEVEL_LABEL[i.level]}</Badge>
-        <span className="text-xs font-mono text-muted-foreground">{i.code}</span>
+        <span className="text-xs font-mono text-muted-foreground shrink-0">{i.code}</span>
         <span className="font-medium text-sm flex-1 truncate">{i.name_th}</span>
         {i.target_value != null && (
           <Badge variant="outline" className="text-xs shrink-0">
             เป้า {targetSymbol(i.target_condition)} {i.target_value}{i.unit ?? ""}
           </Badge>
         )}
-        {i.department_id && <span className="text-xs text-muted-foreground hidden md:inline">{deptMap.get(i.department_id)}</span>}
+        {freqLabel && <span className="text-[11px] text-muted-foreground hidden lg:inline shrink-0">{freqLabel}</span>}
+        {i.department_id && <span className="text-xs text-muted-foreground hidden md:inline truncate max-w-[120px]">{deptMap.get(i.department_id)}</span>}
+        <Badge variant={i.is_active ? "secondary" : "outline"} className="text-[10px] shrink-0">
+          {i.is_active ? "ใช้งาน" : "ปิดใช้งาน"}
+        </Badge>
         {i.formula_link && <a href={i.formula_link} target="_blank" rel="noreferrer" className="text-primary"><ExternalLink className="w-3.5 h-3.5" /></a>}
         {canEdit && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
             {i.level !== "subqi" && <Button size="icon" variant="ghost" onClick={() => onAddChild(i)} title="เพิ่มลูก"><Plus className="w-4 h-4" /></Button>}
-            <Button size="icon" variant="ghost" onClick={() => onEdit(i)}><Pencil className="w-4 h-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={() => onDelete(i)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={() => onEdit(i)} title="แก้ไข"><Pencil className="w-4 h-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={() => onToggle(i)} title={i.is_active ? "ปิดใช้งาน" : "เปิดใช้งาน"}><Power className="w-4 h-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={() => onDelete(i)} className="text-destructive" title="ลบ"><Trash2 className="w-4 h-4" /></Button>
           </div>
         )}
       </div>
       {open && hasKids && node.children.map((c) => (
         <IndicatorNode key={c.ind.id} node={c} deptMap={deptMap} canEdit={canEdit}
-          onEdit={onEdit} onAddChild={onAddChild} onDelete={onDelete} depth={depth + 1} />
+          onEdit={onEdit} onAddChild={onAddChild} onDelete={onDelete} onToggle={onToggle} depth={depth + 1} />
       ))}
     </div>
   );
