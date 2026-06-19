@@ -15,7 +15,7 @@ import { ChevronRight, Plus, Pencil, Trash2, Loader2, ExternalLink, Upload, Down
 import { toast } from "sonner";
 import { exportIndicators } from "@/lib/indicators-xlsx";
 
-export const Route = createFileRoute("/_authenticated/indicators")({
+export const Route = createFileRoute("/_authenticated/indicators/")({
   component: IndicatorsPage,
 });
 

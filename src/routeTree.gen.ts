@@ -13,11 +13,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCapaRouteImport } from './routes/_authenticated/capa'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedIndicatorsIndexRouteImport } from './routes/_authenticated/indicators.index'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
 import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
 import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
@@ -42,11 +42,6 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIndicatorsRoute = AuthenticatedIndicatorsRouteImport.update({
-  id: '/indicators',
-  path: '/indicators',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDataEntryRoute = AuthenticatedDataEntryRouteImport.update({
   id: '/data-entry',
   path: '/data-entry',
@@ -66,6 +61,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIndicatorsIndexRoute =
+  AuthenticatedIndicatorsIndexRouteImport.update({
+    id: '/indicators/',
+    path: '/indicators/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsUsersRoute =
@@ -88,9 +89,9 @@ const AuthenticatedSettingsAuditLogsRoute =
   } as any)
 const AuthenticatedIndicatorsImportRoute =
   AuthenticatedIndicatorsImportRouteImport.update({
-    id: '/import',
-    path: '/import',
-    getParentRoute: () => AuthenticatedIndicatorsRoute,
+    id: '/indicators/import',
+    path: '/indicators/import',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -99,12 +100,12 @@ export interface FileRoutesByFullPath {
   '/capa': typeof AuthenticatedCapaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
-  '/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/indicators/': typeof AuthenticatedIndicatorsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -113,12 +114,12 @@ export interface FileRoutesByTo {
   '/capa': typeof AuthenticatedCapaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
-  '/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/indicators': typeof AuthenticatedIndicatorsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -129,12 +130,12 @@ export interface FileRoutesById {
   '/_authenticated/capa': typeof AuthenticatedCapaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
-  '/_authenticated/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/_authenticated/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
   '/_authenticated/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/_authenticated/indicators/': typeof AuthenticatedIndicatorsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -145,12 +146,12 @@ export interface FileRouteTypes {
     | '/capa'
     | '/dashboard'
     | '/data-entry'
-    | '/indicators'
     | '/reports'
     | '/indicators/import'
     | '/settings/audit-logs'
     | '/settings/departments'
     | '/settings/users'
+    | '/indicators/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -159,12 +160,12 @@ export interface FileRouteTypes {
     | '/capa'
     | '/dashboard'
     | '/data-entry'
-    | '/indicators'
     | '/reports'
     | '/indicators/import'
     | '/settings/audit-logs'
     | '/settings/departments'
     | '/settings/users'
+    | '/indicators'
     | '/settings'
   id:
     | '__root__'
@@ -174,12 +175,12 @@ export interface FileRouteTypes {
     | '/_authenticated/capa'
     | '/_authenticated/dashboard'
     | '/_authenticated/data-entry'
-    | '/_authenticated/indicators'
     | '/_authenticated/reports'
     | '/_authenticated/indicators/import'
     | '/_authenticated/settings/audit-logs'
     | '/_authenticated/settings/departments'
     | '/_authenticated/settings/users'
+    | '/_authenticated/indicators/'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -219,13 +220,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/indicators': {
-      id: '/_authenticated/indicators'
-      path: '/indicators'
-      fullPath: '/indicators'
-      preLoaderRoute: typeof AuthenticatedIndicatorsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/data-entry': {
       id: '/_authenticated/data-entry'
       path: '/data-entry'
@@ -254,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/indicators/': {
+      id: '/_authenticated/indicators/'
+      path: '/indicators'
+      fullPath: '/indicators/'
+      preLoaderRoute: typeof AuthenticatedIndicatorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/users': {
       id: '/_authenticated/settings/users'
       path: '/settings/users'
@@ -277,37 +278,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/indicators/import': {
       id: '/_authenticated/indicators/import'
-      path: '/import'
+      path: '/indicators/import'
       fullPath: '/indicators/import'
       preLoaderRoute: typeof AuthenticatedIndicatorsImportRouteImport
-      parentRoute: typeof AuthenticatedIndicatorsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
-
-interface AuthenticatedIndicatorsRouteChildren {
-  AuthenticatedIndicatorsImportRoute: typeof AuthenticatedIndicatorsImportRoute
-}
-
-const AuthenticatedIndicatorsRouteChildren: AuthenticatedIndicatorsRouteChildren =
-  {
-    AuthenticatedIndicatorsImportRoute: AuthenticatedIndicatorsImportRoute,
-  }
-
-const AuthenticatedIndicatorsRouteWithChildren =
-  AuthenticatedIndicatorsRoute._addFileChildren(
-    AuthenticatedIndicatorsRouteChildren,
-  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCapaRoute: typeof AuthenticatedCapaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
-  AuthenticatedIndicatorsRoute: typeof AuthenticatedIndicatorsRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedIndicatorsImportRoute: typeof AuthenticatedIndicatorsImportRoute
   AuthenticatedSettingsAuditLogsRoute: typeof AuthenticatedSettingsAuditLogsRoute
   AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
   AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
+  AuthenticatedIndicatorsIndexRoute: typeof AuthenticatedIndicatorsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -315,11 +303,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCapaRoute: AuthenticatedCapaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
-  AuthenticatedIndicatorsRoute: AuthenticatedIndicatorsRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedIndicatorsImportRoute: AuthenticatedIndicatorsImportRoute,
   AuthenticatedSettingsAuditLogsRoute: AuthenticatedSettingsAuditLogsRoute,
   AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
   AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
+  AuthenticatedIndicatorsIndexRoute: AuthenticatedIndicatorsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
