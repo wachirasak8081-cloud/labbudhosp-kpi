@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/admin/departments")({
+export const Route = createFileRoute("/_authenticated/settings/departments")({
   component: DepartmentsPage,
 });
 
