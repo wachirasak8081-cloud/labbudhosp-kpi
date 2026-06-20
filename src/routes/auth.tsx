@@ -53,7 +53,9 @@ function AuthPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
             <FlaskConical className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">กลุ่มงานเทคนิคการแพทย์</h1>
+          <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
+            ตัวชี้วัด (KPI/QI){"\n"}กลุ่มงานเทคนิคการแพทย์และพยาธิวิทยาคลินิก
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">โรงพยาบาลพุทธชินราช พิษณุโลก</p>
           <p className="text-xs text-muted-foreground mt-1">ระบบติดตามตัวชี้วัด KPI / QI</p>
         </div>
