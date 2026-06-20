@@ -16,9 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[]; key?: string };
 
 const items: Item[] = [
-  { title: "แดชบอร์ดภาพรวม", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "ตัวชี้วัด", url: "/indicators", icon: ListTree, roles: ["admin", "manager"] },
-  { title: "บันทึกข้อมูล", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"], key: "data-entry" },
+  { title: "บันทึกข้อมูลรายเดือน", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"], key: "data-entry" },
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
@@ -69,8 +69,10 @@ export function AppSidebar() {
             <FlaskConical className="w-5 h-5" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <div className="font-semibold text-sm leading-tight">เทคนิคการแพทย์</div>
-            <div className="text-xs text-sidebar-foreground/70 leading-tight">รพ.พุทธชินราช</div>
+            <div className="font-semibold text-[11px] leading-tight whitespace-pre-line">
+              ตัวชี้วัด (KPI/QI){"\n"}กลุ่มงานเทคนิคการแพทย์และพยาธิวิทยาคลินิก
+            </div>
+            <div className="text-[10px] text-sidebar-foreground/70 leading-tight">โรงพยาบาลพุทธชินราช พิษณุโลก</div>
           </div>
         </div>
       </SidebarHeader>
