@@ -375,6 +375,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cascade_recompute_ancestors: {
+        Args: {
+          _child_indicator_id: string
+          _fiscal_year: number
+          _period_month: number
+        }
+        Returns: undefined
+      }
       current_user_department: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -382,6 +390,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recompute_parent_measurement: {
+        Args: {
+          _fiscal_year: number
+          _parent_id: string
+          _period_month: number
+        }
+        Returns: undefined
       }
     }
     Enums: {
