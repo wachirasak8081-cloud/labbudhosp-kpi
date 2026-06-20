@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, ListTree, ClipboardEdit, AlertTriangle, FileBarChart2,
   Settings, FlaskConical,
@@ -7,22 +8,56 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { useFiscalYear } from "@/hooks/use-fiscal-year";
+import { supabase } from "@/integrations/supabase/client";
 
-type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[] };
+type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[]; key?: string };
 
 const items: Item[] = [
   { title: "แดชบอร์ดภาพรวม", url: "/dashboard", icon: LayoutDashboard },
   { title: "ตัวชี้วัด", url: "/indicators", icon: ListTree, roles: ["admin", "manager"] },
-  { title: "บันทึกข้อมูล", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"] },
+  { title: "บันทึกข้อมูล", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"], key: "data-entry" },
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
 
+function usePendingCount() {
+  const { fiscalYear } = useFiscalYear();
+  const { profile, hasAnyRole, user } = useAuth();
+  const isStaff = !hasAnyRole(["admin", "manager"]);
+  const month = new Date().getMonth() + 1;
+
+  return useQuery({
+    enabled: !!user,
+    queryKey: ["pending-count", fiscalYear, month, profile?.department_id, isStaff],
+    queryFn: async () => {
+      let indQ = supabase.from("indicators").select("id, department_id").eq("is_active", true).eq("is_leaf", true);
+      if (isStaff && profile?.department_id) indQ = indQ.eq("department_id", profile.department_id);
+      const [{ data: inds }, { data: meas }] = await Promise.all([
+        indQ,
+        supabase.from("measurements").select("indicator_id, status").eq("fiscal_year", fiscalYear).eq("period_month", month),
+      ]);
+      const statusBy = new Map<string, string>();
+      (meas ?? []).forEach((m) => statusBy.set(m.indicator_id, m.status));
+      let pending = 0;
+      (inds ?? []).forEach((i) => {
+        const s = statusBy.get(i.id);
+        if (!s || s === "draft") pending++;
+      });
+      return pending;
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+}
+
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { hasAnyRole } = useAuth();
+  const { data: pending } = usePendingCount();
   const isActive = (url: string) => pathname === url || pathname.startsWith(url + "/");
   const visible = items.filter((i) => !i.roles || hasAnyRole(i.roles));
 
@@ -45,16 +80,24 @@ export function AppSidebar() {
           <SidebarGroupLabel>เมนูหลัก</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visible.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visible.map((item) => {
+                const showBadge = item.key === "data-entry" && (pending ?? 0) > 0;
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                      <Link to={item.url}>
+                        <item.icon className="w-4 h-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {showBadge && (
+                          <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] group-data-[collapsible=icon]:hidden">
+                            {pending}
+                          </Badge>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
