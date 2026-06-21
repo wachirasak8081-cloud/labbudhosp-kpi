@@ -109,8 +109,8 @@ function CapaPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data!.capa.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ยังไม่มีแผนแก้ไข</TableCell></TableRow>}
-              {data!.capa.map((c) => {
+              {filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ไม่พบรายการ</TableCell></TableRow>}
+              {filtered.map((c) => {
                 const ind = indMap.get(c.indicator_id);
                 return (
                   <TableRow key={c.id}>
