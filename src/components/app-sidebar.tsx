@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, ListTree, ClipboardEdit, AlertTriangle, FileBarChart2,
-  Settings, FlaskConical,
+  Settings, FlaskConical, Target,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -20,6 +20,7 @@ const items: Item[] = [
   { title: "ตัวชี้วัด", url: "/indicators", icon: ListTree, roles: ["admin", "manager"] },
   { title: "บันทึกข้อมูลรายเดือน", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"], key: "data-entry" },
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
+  { title: "ทบทวนเป้าหมาย", url: "/targets", icon: Target, roles: ["admin", "manager"] },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
