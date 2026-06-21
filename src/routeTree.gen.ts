@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedTargetsRouteImport } from './routes/_authenticated/targets'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
@@ -25,6 +26,7 @@ import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_
 import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
 import { Route as AuthenticatedIndicatorsImportRouteImport } from './routes/_authenticated/indicators.import'
 import { Route as AuthenticatedDataEntryHistoryRouteImport } from './routes/_authenticated/data-entry.history'
+import { Route as AuthenticatedDashboardIndicatorIdRouteImport } from './routes/_authenticated/dashboard.indicator.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -39,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTargetsRoute = AuthenticatedTargetsRouteImport.update({
+  id: '/targets',
+  path: '/targets',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
@@ -113,15 +120,22 @@ const AuthenticatedDataEntryHistoryRoute =
     path: '/history',
     getParentRoute: () => AuthenticatedDataEntryRoute,
   } as any)
+const AuthenticatedDashboardIndicatorIdRoute =
+  AuthenticatedDashboardIndicatorIdRouteImport.update({
+    id: '/indicator/$id',
+    path: '/indicator/$id',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/capa': typeof AuthenticatedCapaRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/data-entry': typeof AuthenticatedDataEntryRouteWithChildren
   '/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
+  '/targets': typeof AuthenticatedTargetsRoute
   '/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
   '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
@@ -130,13 +144,15 @@ export interface FileRoutesByFullPath {
   '/data-entry/': typeof AuthenticatedDataEntryIndexRoute
   '/indicators/': typeof AuthenticatedIndicatorsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/dashboard/indicator/$id': typeof AuthenticatedDashboardIndicatorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/capa': typeof AuthenticatedCapaRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
+  '/targets': typeof AuthenticatedTargetsRoute
   '/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
   '/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
@@ -145,6 +161,7 @@ export interface FileRoutesByTo {
   '/data-entry': typeof AuthenticatedDataEntryIndexRoute
   '/indicators': typeof AuthenticatedIndicatorsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/dashboard/indicator/$id': typeof AuthenticatedDashboardIndicatorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,10 +169,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/capa': typeof AuthenticatedCapaRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRouteWithChildren
   '/_authenticated/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/targets': typeof AuthenticatedTargetsRoute
   '/_authenticated/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
   '/_authenticated/indicators/import': typeof AuthenticatedIndicatorsImportRoute
   '/_authenticated/settings/audit-logs': typeof AuthenticatedSettingsAuditLogsRoute
@@ -164,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/data-entry/': typeof AuthenticatedDataEntryIndexRoute
   '/_authenticated/indicators/': typeof AuthenticatedIndicatorsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/dashboard/indicator/$id': typeof AuthenticatedDashboardIndicatorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -175,6 +194,7 @@ export interface FileRouteTypes {
     | '/data-entry'
     | '/indicators'
     | '/reports'
+    | '/targets'
     | '/data-entry/history'
     | '/indicators/import'
     | '/settings/audit-logs'
@@ -183,6 +203,7 @@ export interface FileRouteTypes {
     | '/data-entry/'
     | '/indicators/'
     | '/settings/'
+    | '/dashboard/indicator/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -190,6 +211,7 @@ export interface FileRouteTypes {
     | '/capa'
     | '/dashboard'
     | '/reports'
+    | '/targets'
     | '/data-entry/history'
     | '/indicators/import'
     | '/settings/audit-logs'
@@ -198,6 +220,7 @@ export interface FileRouteTypes {
     | '/data-entry'
     | '/indicators'
     | '/settings'
+    | '/dashboard/indicator/$id'
   id:
     | '__root__'
     | '/'
@@ -208,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/data-entry'
     | '/_authenticated/indicators'
     | '/_authenticated/reports'
+    | '/_authenticated/targets'
     | '/_authenticated/data-entry/history'
     | '/_authenticated/indicators/import'
     | '/_authenticated/settings/audit-logs'
@@ -216,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/data-entry/'
     | '/_authenticated/indicators/'
     | '/_authenticated/settings/'
+    | '/_authenticated/dashboard/indicator/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -246,6 +271,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/targets': {
+      id: '/_authenticated/targets'
+      path: '/targets'
+      fullPath: '/targets'
+      preLoaderRoute: typeof AuthenticatedTargetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
@@ -338,8 +370,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDataEntryHistoryRouteImport
       parentRoute: typeof AuthenticatedDataEntryRoute
     }
+    '/_authenticated/dashboard/indicator/$id': {
+      id: '/_authenticated/dashboard/indicator/$id'
+      path: '/indicator/$id'
+      fullPath: '/dashboard/indicator/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardIndicatorIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
   }
 }
+
+interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardIndicatorIdRoute: typeof AuthenticatedDashboardIndicatorIdRoute
+}
+
+const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
+  {
+    AuthenticatedDashboardIndicatorIdRoute:
+      AuthenticatedDashboardIndicatorIdRoute,
+  }
+
+const AuthenticatedDashboardRouteWithChildren =
+  AuthenticatedDashboardRoute._addFileChildren(
+    AuthenticatedDashboardRouteChildren,
+  )
 
 interface AuthenticatedDataEntryRouteChildren {
   AuthenticatedDataEntryHistoryRoute: typeof AuthenticatedDataEntryHistoryRoute
@@ -375,10 +429,11 @@ const AuthenticatedIndicatorsRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCapaRoute: typeof AuthenticatedCapaRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRouteWithChildren
   AuthenticatedIndicatorsRoute: typeof AuthenticatedIndicatorsRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedTargetsRoute: typeof AuthenticatedTargetsRoute
   AuthenticatedSettingsAuditLogsRoute: typeof AuthenticatedSettingsAuditLogsRoute
   AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
   AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
@@ -387,10 +442,11 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCapaRoute: AuthenticatedCapaRoute,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRouteWithChildren,
   AuthenticatedIndicatorsRoute: AuthenticatedIndicatorsRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedTargetsRoute: AuthenticatedTargetsRoute,
   AuthenticatedSettingsAuditLogsRoute: AuthenticatedSettingsAuditLogsRoute,
   AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
   AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
@@ -408,13 +464,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

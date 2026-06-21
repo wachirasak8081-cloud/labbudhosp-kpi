@@ -116,7 +116,7 @@ function IndicatorDetailPage() {
                     <TableCell className="text-right text-sm">{m?.denominator ?? "—"}</TableCell>
                     <TableCell className="text-right text-sm font-semibold">{m?.calculated_value != null ? Number(m.calculated_value).toFixed(2) : "—"}</TableCell>
                     <TableCell><Badge variant="outline" className="text-xs">{m?.status ?? "—"}</Badge></TableCell>
-                    <TableCell className="text-sm">{userName(m?.created_by ?? null)}</TableCell>
+                    <TableCell className="text-sm">{userName(m?.entered_by ?? null)}</TableCell>
                   </TableRow>
                 );
               })}
