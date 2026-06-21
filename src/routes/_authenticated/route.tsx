@@ -63,9 +63,11 @@ function AuthLayout() {
 }
 
 function pageTitle(path: string): string {
+  if (path.startsWith("/dashboard/indicator")) return "รายละเอียดตัวชี้วัด";
   if (path.startsWith("/dashboard")) return "แดชบอร์ดภาพรวม";
   if (path.startsWith("/indicators/import")) return "นำเข้าตัวชี้วัดจาก Excel";
   if (path.startsWith("/indicators")) return "จัดการตัวชี้วัด";
+  if (path.startsWith("/targets")) return "ทบทวนเป้าหมายประจำปี";
   if (path.startsWith("/data-entry")) return "บันทึกข้อมูล";
   if (path.startsWith("/capa")) return "แผนแก้ไข (CAPA / CQI)";
   if (path.startsWith("/reports")) return "รายงานสรุป";
