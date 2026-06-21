@@ -33,26 +33,65 @@ function CapaPage() {
   const canEdit = hasAnyRole(["admin", "manager"]);
   const [editing, setEditing] = useState<CAPA | null>(null);
   const [creating, setCreating] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all");
+  const [deptFilter, setDeptFilter] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["capa", fiscalYear],
     queryFn: async () => {
-      const [{ data: capa }, { data: inds }] = await Promise.all([
+      const [{ data: capa }, { data: inds }, { data: depts }] = await Promise.all([
         supabase.from("corrective_actions").select("*").eq("fiscal_year", fiscalYear).order("created_at", { ascending: false }),
-        supabase.from("indicators").select("id, code, name_th"),
+        supabase.from("indicators").select("id, code, name_th, department_id"),
+        supabase.from("departments").select("id, name_th").order("name_th"),
       ]);
-      return { capa: (capa ?? []) as CAPA[], inds: inds ?? [] };
+      return { capa: (capa ?? []) as CAPA[], inds: inds ?? [], depts: depts ?? [] };
     },
   });
   const indMap = new Map((data?.inds ?? []).map((i) => [i.id, i]));
 
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
+  const filtered = data!.capa.filter((c) => {
+    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (monthFilter !== "all" && String(c.period_month ?? "") !== monthFilter) return false;
+    if (deptFilter !== "all") {
+      const ind = indMap.get(c.indicator_id);
+      if (ind?.department_id !== deptFilter) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">แผนแก้ไขเชิงป้องกันและการพัฒนาคุณภาพต่อเนื่อง (CAPA / CQI) ปีงบประมาณ {fiscalYear}</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="text-sm text-muted-foreground">CAPA / CQI ปีงบประมาณ {fiscalYear}</p>
         {canEdit && <Button onClick={() => { setEditing(null); setCreating(true); }}><Plus className="w-4 h-4 mr-2" />เพิ่มแผน</Button>}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="สถานะ" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกสถานะ</SelectItem>
+            <SelectItem value="open">เปิดอยู่</SelectItem>
+            <SelectItem value="in_progress">กำลังดำเนินการ</SelectItem>
+            <SelectItem value="closed">ปิดแล้ว</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-[120px]"><SelectValue placeholder="เดือน" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกเดือน</SelectItem>
+            {[10,11,12,1,2,3,4,5,6,7,8,9].map((m, i) => <SelectItem key={m} value={String(m)}>{["ต.ค.","พ.ย.","ธ.ค.","ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย."][i]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={deptFilter} onValueChange={setDeptFilter}>
+          <SelectTrigger className="w-[200px]"><SelectValue placeholder="สาขา" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกสาขา</SelectItem>
+            {data!.depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name_th}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
