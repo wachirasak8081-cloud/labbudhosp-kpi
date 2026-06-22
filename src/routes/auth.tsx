@@ -54,10 +54,10 @@ function AuthPage() {
             <FlaskConical className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
-            ตัวชี้วัด (KPI/QI){"\n"}กลุ่มงานเทคนิคการแพทย์และพยาธิวิทยาคลินิก
+            ระบบติดตามตัวชี้วัด KPI/QI{"\n"}กลุ่มงานเทคนิคการแพทย์และพยาธิวิทยาคลินิก
           </h1>
           <p className="text-sm text-muted-foreground mt-1">โรงพยาบาลพุทธชินราช พิษณุโลก</p>
-          <p className="text-xs text-muted-foreground mt-1">ระบบติดตามตัวชี้วัด KPI / QI</p>
+          <p className="text-xs text-muted-foreground mt-1">จัดทำโดย นายวชิรศักดิ์ ภูริสวัสดิ์ นักเทคนิคการแพทย์ชำนาญการพิเศษ</p>
         </div>
         <Card className="border-border/60 shadow-xl">
           <CardHeader>
