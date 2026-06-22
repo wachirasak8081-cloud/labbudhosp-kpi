@@ -64,6 +64,12 @@ function Inner() {
                   <TableCell><Badge variant={d.is_active ? "default" : "secondary"}>{d.is_active ? "ใช้งาน" : "ปิดใช้งาน"}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(d); setCreating(false); }}><Pencil className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={async () => {
+                      if (!confirm(`ลบสาขา "${d.name_th}" ?`)) return;
+                      const { error } = await supabase.from("departments").delete().eq("id", d.id);
+                      if (error) toast.error("ลบไม่สำเร็จ: " + error.message);
+                      else { toast.success("ลบแล้ว"); qc.invalidateQueries({ queryKey: ["departments-all"] }); }
+                    }}><Trash2 className="w-4 h-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
