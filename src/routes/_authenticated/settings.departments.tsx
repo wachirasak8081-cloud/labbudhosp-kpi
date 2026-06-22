@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings/departments")({
@@ -64,6 +64,12 @@ function Inner() {
                   <TableCell><Badge variant={d.is_active ? "default" : "secondary"}>{d.is_active ? "ใช้งาน" : "ปิดใช้งาน"}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(d); setCreating(false); }}><Pencil className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={async () => {
+                      if (!confirm(`ลบสาขา "${d.name_th}" ?`)) return;
+                      const { error } = await supabase.from("departments").delete().eq("id", d.id);
+                      if (error) toast.error("ลบไม่สำเร็จ: " + error.message);
+                      else { toast.success("ลบแล้ว"); qc.invalidateQueries({ queryKey: ["departments-all"] }); }
+                    }}><Trash2 className="w-4 h-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
