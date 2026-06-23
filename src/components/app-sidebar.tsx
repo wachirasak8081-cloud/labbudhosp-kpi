@@ -17,10 +17,10 @@ type Item = { title: string; url: string; icon: React.ComponentType<{ className?
 
 const items: Item[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "ตัวชี้วัด", url: "/indicators", icon: ListTree, roles: ["admin", "manager"] },
-  { title: "บันทึกข้อมูลรายเดือน", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin"], key: "data-entry" },
+  { title: "ตัวชี้วัด", url: "/indicators", icon: ListTree, roles: ["admin", "manager", "auditor"] },
+  { title: "บันทึกข้อมูลรายเดือน", url: "/data-entry", icon: ClipboardEdit, roles: ["staff", "manager", "admin", "auditor"], key: "data-entry" },
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
-  { title: "ทบทวนเป้าหมาย", url: "/targets", icon: Target, roles: ["admin", "manager"] },
+  { title: "ทบทวนเป้าหมาย", url: "/targets", icon: Target, roles: ["admin", "manager", "auditor"] },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
