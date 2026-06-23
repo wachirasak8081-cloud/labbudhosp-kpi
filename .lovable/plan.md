@@ -1,53 +1,62 @@
-# Phase 2 — จัดการตัวชี้วัด 4 ระดับ + นำเข้า Excel + Seed ข้อมูลจริง
+# Phase 6 — Security, Test, Deploy
 
-## 1. Sidebar & Layout
-- ปรับเมนูเป็น 6 รายการตามสเปก: แดชบอร์ดภาพรวม / ตัวชี้วัด (admin,manager) / บันทึกข้อมูล `/data-entry` (staff,manager) / CAPA-CQI / รายงาน / ตั้งค่า `/settings` (admin)
-- มุมบนขวา: แสดงชื่อผู้ใช้ + บทบาท + สาขา + ปุ่ม Logout (เพิ่ม UserMenu ใน header ของ `_authenticated/route.tsx`)
-- redirect `/measurements` → `/data-entry`, `/admin/*` ย้ายเข้าใต้ `/settings/*` (users, departments, audit-logs)
+สถานะตอนนี้ (ตรวจจากฐานข้อมูลและโค้ดจริง)
 
-## 2. Departments seed (เพิ่ม code)
-เพิ่มคอลัมน์ `code` ในตาราง `departments` (ถ้ายังไม่มี) เพื่อใช้ map กับ Excel/seed:
-`general, bloodbank, bacteria, chemistry, immunology, hematology, microscopic, biomolecular` (+ คงชื่อไทยเดิม)
-Migration: ALTER TABLE add code unique + UPDATE 8 แถวเดิม
+- RLS เปิดครบทั้ง 8 ตาราง, Supabase linter ผ่าน 0 issues
+- ช่องโหว่ 3 รายการที่เคยพบใน Phase 5 ปิดไปแล้ว (private schema, dept ไม่อ่านโดย anon, ล็อก self-update ของ profiles)
+- Trigger ตรวจสอบ (audit) ทำงานครบบน indicators / measurements / corrective_actions / target_history แล้ว
+- Cascade คำนวณ leaf → parent ทำงานผ่าน trigger ที่ฐานข้อมูล
 
-## 3. หน้า `/indicators` ปรับปรุง
-- Tree View แสดง: รหัส | ชื่อ | ระดับ | เป้า | ความถี่ | สาขา | สถานะ (Badge ใช้งาน/ปิด)
-- Toolbar: `+ เพิ่มตัวชี้วัด` | `นำเข้า Excel` (link → `/indicators/import`) | `ส่งออก Excel`
-- Per-node actions: แก้ไข | ลบ | toggle ปิด/เปิดใช้งาน
-- Modal เพิ่ม/แก้ไข เพิ่มฟิลด์:
-  - parent_id เป็น searchable Combobox (กรองตามระดับที่ valid)
-  - assigned_user_id (searchable dropdown จาก profiles) — เพิ่มคอลัมน์ในตาราง indicators
-  - หน่วยเป็น dropdown `%`/`ครั้ง`/`ชั่วโมง` (อนุญาตพิมพ์เอง)
-  - ครบ field ตามสเปก
+ที่ยังขาดเทียบกับสเปก Phase 6 มี 2 จุด — เป็นเฉพาะ corrective_actions
 
-Migration: ALTER TABLE indicators ADD COLUMN assigned_user_id uuid REFERENCES profiles(id)
+## 1) แก้ RLS ของ corrective_actions ให้ครบสเปก
 
-## 4. หน้า `/indicators/import` (Excel)
-- ใช้ lib `xlsx` (SheetJS)
-- ปุ่ม "ดาวน์โหลด Template" → สร้าง .xlsx ฝั่ง client พร้อม header 16 คอลัมน์ + 1 ตัวอย่าง
-- Drag & drop / browse → parse → preview table + validate (level valid, parent_code มีอยู่จริงหรืออยู่ในไฟล์เดียวกัน, code ซ้ำ, target_condition ∈ {gte,lte,eq}, department_code map ได้)
-- ปุ่ม `นำเข้าข้อมูล`: insert ไล่ลำดับ object→kpi→qi→subqi ผูก parent ด้วย code; ข้ามถ้า code ซ้ำในฐาน
-- สรุปผล: success/skipped/error
+สเปก: staff INSERT ได้เฉพาะ indicator ของสาขาตน, UPDATE เฉพาะแถวที่ตนสร้าง; manager / admin / auditor เหมือนเดิม
 
-## 5. ส่งออก Excel
-ปุ่มใน `/indicators` → ดึง indicators ทั้งหมด + departments แล้ว download .xlsx ตาม schema เดียวกับ template
+ของจริงตอนนี้: มีแต่ admin (ทุกอย่าง), manager (insert/update), อ่านได้ทุก role — **ยังไม่มี policy ให้ staff เขียน**
 
-## 6. Seed ข้อมูลจริง (Migration)
-Insert ผ่าน migration เดียว (idempotent ด้วย ON CONFLICT (code) DO NOTHING):
-- Objects 4, KPIs 11
-- QIs ทั้งหมดตามสเปก (1.1–11.2)
-- Sub-QIs: 2.1.1–2.1.7, 2.2.1–2.2.7, 3.1.1–3.1.7, 3.2.1–3.2.7, 5.2.1–5.2.28, 5.3.1–5.3.28
-- ผูก parent ผ่าน subquery `(SELECT id FROM indicators WHERE code='...')`
-- ผูก department ผ่าน code
-- ตั้ง target_value, target_condition, frequency, is_leaf, is_inverted, formula_description ตามสเปก
-- KPI4 เก็บ formula_description "100-(เฉลี่ย QI4.1+QI4.2)" และมี note สำหรับการคำนวณพิเศษภายหลัง
+จะเพิ่ม policy 2 ตัวผ่าน migration:
 
-## เทคนิค
-- เพิ่ม dependency: `xlsx` (SheetJS) — รัน build ฝั่ง client เท่านั้น
-- Combobox: ใช้ shadcn `command` + `popover` ที่มีอยู่แล้ว
-- ใช้ `useAuth().hasAnyRole` ควบคุมการแสดงเมนู
-- Seed ใช้ migration เดียว ขนาดใหญ่ แต่ idempotent
+- `capa_staff_insert` — INSERT TO authenticated, WITH CHECK = staff role AND indicator.department_id = private.current_user_department() AND created_by = auth.uid()
+- `capa_staff_update_own` — UPDATE TO authenticated, USING = staff role AND created_by = auth.uid() AND status ≠ 'closed', WITH CHECK เหมือนกัน
 
-## หมายเหตุ
-- การคำนวณค่าจริงของ parent (average จากลูก) และ logic พิเศษ KPI4 = 100 - avg(QI4.1, QI4.2) อยู่ใน Phase ถัดไป (หน้ารายงาน/dashboard) — Phase 2 เก็บเฉพาะ metadata/สูตรในฟิลด์ formula_description
-- การมอบหมายผู้ใช้ใน seed เว้นว่าง (กำหนดภายหลังจาก /settings/users)
+ไม่แตะ policy เดิมของ admin/manager/auditor — auditor ยังคงเป็น read-only ตามสเปก  อนุญาตให้เห็นทุกหน้า (ยกเว้นหน้าตั้งค่า)  แบบ read only ด้วย 
+
+## 2) ตั้งค่า Auth Email templates เป็นภาษาไทย
+
+จะเรียก scaffold auth email templates ของ Lovable (ครอบคลุมทั้ง 6 template: confirm signup, magic link, recovery, invite, email change, reauthentication) แล้วปรับเนื้อหาเป็นภาษาไทยพร้อม brand ของระบบ "ตัวชี้วัด KPI/QI กลุ่มงานเทคนิคการแพทย์ฯ"
+
+ต้องมี email domain ของโปรเจกต์ก่อน — ถ้ายังไม่มีจะเปิด dialog ให้ตั้งค่า domain ก่อน
+
+## 3) Testing — checklist ที่ทำได้อัตโนมัติ
+
+ใช้ Playwright รันบนพรีวิว localhost (มี session admin ที่ Lovable เตรียมให้):
+
+- Login → /dashboard เปิดได้, sidebar เห็นเมนูครบ
+- เปิด /indicators, /data-entry, /reports, /capa, /targets, /settings/* แล้วจับ screenshot + console error
+- หน้า /reports คลิก tab ทั้ง 4 และยืนยันว่า Export CSV / PDF / Excel ไม่ error (รัน flow คลิกปุ่ม จับ network response)
+- หน้า /dashboard: ยืนยันมี KPI card, matrix 12 เดือน, line chart, alert panel ครบ
+- Logout → กลับไป /auth
+
+ส่วนที่ทดสอบอัตโนมัติไม่ได้ (ต้องใช้ user จริงคนละ role) จะสรุปเป็น manual checklist ให้ทำหลัง deploy: staff บันทึกเฉพาะสาขาตน, auditor ไม่มีปุ่มแก้ไข, การ login ของแต่ละ role
+
+## 4) Deploy
+
+- ตรวจ metadata หน้า root (title, description, OG, Twitter, favicon) ของระบบ — ถ้ายังเป็น default จะอัปเดตเป็นชื่อระบบจริงก่อน publish
+- เรียก security scan ครั้งสุดท้ายเพื่อยืนยันไม่มี finding ระดับ critical
+- Publish โปรเจกต์, ส่ง URL ให้ผู้ใช้
+
+หมายเหตุ: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY ตั้งไว้แล้วจาก Lovable Cloud, ไม่ต้องทำเพิ่ม
+
+## เรื่องที่ขอตัดสินใจก่อนเริ่ม
+
+1. **Seed ตัวชี้วัด 123 จุด** — สเปกขอให้ seed แต่ไฟล์ Excel template ของจริงต้องมาจากเอกสารผู้ใช้ ไม่มีในโปรเจกต์ ทางเลือก:
+  - (ก) ข้ามขั้นนี้ ให้ admin import เองหลัง deploy ผ่านหน้า /indicators/import (มีอยู่แล้ว) — **แนะนำ**
+  - (ข) สร้าง mock 123 รายการเอง (จะไม่ตรงตามเอกสารจริง)
+    ตอบ (ก)
+2. **profiles SELECT** — สเปกเขียนว่า "ทุก role อ่านเฉพาะของตน" แต่ของจริง manager/auditor อ่านได้ทุกคน (จำเป็นสำหรับหน้า dashboard ที่โชว์ผู้รับผิดชอบ) — เสนอ **คงไว้** เพราะถ้าตัดออกหน้า dashboard/reports จะแสดงชื่อผู้รับผิดชอบไม่ได้
+   ตอบ คงไว้
+3. **Auth email Thai templates** — ต้องตั้ง email domain ของโปรเจกต์ก่อน, ทำตอนนี้หรือเลื่อน?
+  ตอบ เลื่อน
+
+ตอบ 3 ข้อนี้แล้วผมเริ่มลงมือทันที (หรือบอก "ลุยเลย" ถ้ารับค่าเริ่มต้น: ก / คงไว้ / เลื่อน)
