@@ -383,14 +383,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      current_user_department: { Args: never; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       recompute_parent_measurement: {
         Args: {
           _fiscal_year: number
