@@ -47,54 +47,228 @@ export type Database = {
         }
         Relationships: []
       }
+      capa_attachments: {
+        Row: {
+          capa_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          capa_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          capa_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capa_attachments_capa_id_fkey"
+            columns: ["capa_id"]
+            isOneToOne: false
+            referencedRelation: "corrective_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capa_comments: {
+        Row: {
+          capa_id: string
+          comment: string
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          capa_id: string
+          comment: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          capa_id?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capa_comments_capa_id_fkey"
+            columns: ["capa_id"]
+            isOneToOne: false
+            referencedRelation: "corrective_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capa_documents: {
+        Row: {
+          created_at: string
+          doc_code: string | null
+          id: string
+          related_indicator_id: string | null
+          storage_path: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_code?: string | null
+          id?: string
+          related_indicator_id?: string | null
+          storage_path?: string | null
+          tags?: string[]
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_code?: string | null
+          id?: string
+          related_indicator_id?: string | null
+          storage_path?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capa_documents_related_indicator_id_fkey"
+            columns: ["related_indicator_id"]
+            isOneToOne: false
+            referencedRelation: "indicators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       corrective_actions: {
         Row: {
           action_plan: string
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          closed_at: string | null
+          containment_action: string | null
           created_at: string
           created_by: string | null
           due_date: string | null
+          effectiveness: string | null
           fiscal_year: number
           id: string
           indicator_id: string
+          nc_detected_by: string | null
+          nc_detected_date: string | null
+          nc_source: string | null
+          pdca_phase: string | null
           period_month: number | null
+          priority: string | null
           problem_description: string
+          rca_data: Json | null
+          rca_method: string | null
+          rejection_reason: string | null
           responsible_person: string | null
           result_description: string | null
           root_cause: string | null
+          severity: string | null
           status: string
           updated_at: string
+          verification_1m: number | null
+          verification_3m: number | null
+          verification_before: number | null
         }
         Insert: {
           action_plan: string
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          closed_at?: string | null
+          containment_action?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
+          effectiveness?: string | null
           fiscal_year: number
           id?: string
           indicator_id: string
+          nc_detected_by?: string | null
+          nc_detected_date?: string | null
+          nc_source?: string | null
+          pdca_phase?: string | null
           period_month?: number | null
+          priority?: string | null
           problem_description: string
+          rca_data?: Json | null
+          rca_method?: string | null
+          rejection_reason?: string | null
           responsible_person?: string | null
           result_description?: string | null
           root_cause?: string | null
+          severity?: string | null
           status?: string
           updated_at?: string
+          verification_1m?: number | null
+          verification_3m?: number | null
+          verification_before?: number | null
         }
         Update: {
           action_plan?: string
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          closed_at?: string | null
+          containment_action?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
+          effectiveness?: string | null
           fiscal_year?: number
           id?: string
           indicator_id?: string
+          nc_detected_by?: string | null
+          nc_detected_date?: string | null
+          nc_source?: string | null
+          pdca_phase?: string | null
           period_month?: number | null
+          priority?: string | null
           problem_description?: string
+          rca_data?: Json | null
+          rca_method?: string | null
+          rejection_reason?: string | null
           responsible_person?: string | null
           result_description?: string | null
           root_cause?: string | null
+          severity?: string | null
           status?: string
           updated_at?: string
+          verification_1m?: number | null
+          verification_3m?: number | null
+          verification_before?: number | null
         }
         Relationships: [
           {
