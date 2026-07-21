@@ -55,7 +55,7 @@ function CapaPage() {
     queryFn: async () => {
       const [{ data: capa }, { data: inds }, { data: depts }, { data: meas }] = await Promise.all([
         supabase.from("corrective_actions").select("*").eq("fiscal_year", fiscalYear).order("created_at", { ascending: false }),
-        supabase.from("indicators").select("id, code, name_th, department_id, target_value, is_leaf, is_inverted, target_condition"),
+        supabase.from("indicators").select("id, code, name_th, department_id, target_value, is_leaf, is_inverted, target_condition, sort_order").order("sort_order").order("code"),
         supabase.from("departments").select("id, name_th").order("name_th"),
         supabase.from("measurements").select("indicator_id, fiscal_year, period_month, calculated_value").eq("fiscal_year", fiscalYear),
       ]);

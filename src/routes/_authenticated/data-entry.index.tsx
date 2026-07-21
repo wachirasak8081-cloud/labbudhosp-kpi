@@ -73,7 +73,7 @@ function DataEntryPage() {
           .select("id, code, name_th, department_id, target_value, target_condition, is_inverted, unit")
           .eq("is_active", true).eq("is_leaf", true)
           .eq("department_id", deptId)
-          .order("code"),
+          .order("sort_order").order("code"),
         supabase.from("measurements").select("*")
           .eq("fiscal_year", fiscalYear).eq("period_month", month),
       ]);
