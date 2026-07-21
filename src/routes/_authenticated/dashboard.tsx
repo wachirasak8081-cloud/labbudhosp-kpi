@@ -53,7 +53,7 @@ function DashboardPage() {
     queryKey: ["dashboard", fiscalYear],
     queryFn: async () => {
       const [{ data: inds }, { data: meas }, { data: capa }] = await Promise.all([
-        supabase.from("indicators").select("id, code, name_th, level, parent_id, target_value, target_condition, is_inverted, is_leaf, is_active, department_id").eq("is_active", true),
+        supabase.from("indicators").select("id, code, name_th, level, parent_id, target_value, target_condition, is_inverted, is_leaf, is_active, department_id, sort_order").eq("is_active", true).order("sort_order").order("code"),
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator, status").eq("fiscal_year", fiscalYear),
         supabase.from("corrective_actions").select("id, indicator_id, status").eq("fiscal_year", fiscalYear),
       ]);

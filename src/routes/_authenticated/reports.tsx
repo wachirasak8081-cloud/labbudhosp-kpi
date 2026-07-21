@@ -533,7 +533,7 @@ function CompareSection() {
     queryKey: ["compare-qi", fiscalYear],
     queryFn: async () => {
       const [{ data: inds }, { data: meas }, { data: depts }] = await Promise.all([
-        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted").eq("is_active", true),
+        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order").eq("is_active", true).order("sort_order").order("code"),
         supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear),
         supabase.from("departments").select("id, name_th"),
       ]);
