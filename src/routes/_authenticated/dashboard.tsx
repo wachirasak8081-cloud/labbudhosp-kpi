@@ -57,7 +57,8 @@ function DashboardPage() {
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator, status").eq("fiscal_year", fiscalYear),
         supabase.from("corrective_actions").select("id, indicator_id, status").eq("fiscal_year", fiscalYear),
       ]);
-      return { inds: (inds ?? []) as Ind[], meas: (meas ?? []) as Meas[], capa: capa ?? [] };
+      const { sortIndicators } = await import("@/lib/indicator-sort");
+      return { inds: sortIndicators((inds ?? []) as Ind[]), meas: (meas ?? []) as Meas[], capa: capa ?? [] };
     },
   });
 

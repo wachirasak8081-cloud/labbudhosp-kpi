@@ -37,7 +37,8 @@ function TargetsPage() {
         supabase.from("target_history").select("*").order("changed_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name"),
       ]);
-      return { inds: (inds ?? []) as Ind[], hist: (hist ?? []) as History[], profiles: profiles ?? [] };
+      const { sortIndicators } = await import("@/lib/indicator-sort");
+      return { inds: sortIndicators((inds ?? []) as Ind[]), hist: (hist ?? []) as History[], profiles: profiles ?? [] };
     },
   });
 

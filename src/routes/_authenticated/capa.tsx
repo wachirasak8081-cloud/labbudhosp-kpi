@@ -59,9 +59,10 @@ function CapaPage() {
         supabase.from("departments").select("id, name_th").order("name_th"),
         supabase.from("measurements").select("indicator_id, fiscal_year, period_month, calculated_value").eq("fiscal_year", fiscalYear),
       ]);
+      const { sortIndicators } = await import("@/lib/indicator-sort");
       return {
         capa: (capa ?? []) as CAPA[],
-        inds: (inds ?? []) as Indicator[],
+        inds: sortIndicators((inds ?? []) as Indicator[]),
         depts: (depts ?? []) as Dept[],
         meas: (meas ?? []) as Measurement[],
       };
