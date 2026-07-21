@@ -2,10 +2,12 @@
 // OBJ1, KPI1, QI1.1, QI1.2, ..., KPI2, QI2.1, SUB2.1.1, SUB2.1.2, ...
 
 const LEVEL_RANK: Record<string, number> = {
+  object: 1,
   objective: 1,
   kpi: 2,
   qi: 3,
   subqi: 4,
+  sub_qi: 4,
 };
 
 function numericPath(code: string): number[] {
