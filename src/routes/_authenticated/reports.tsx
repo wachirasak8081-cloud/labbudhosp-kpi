@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Download, Loader2, FileText, FileSpreadsheet, Eye, CheckCircle2, XCircle } from "lucide-react";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
+import { sortIndicators } from "@/lib/indicator-sort";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from "recharts";
 import { toast } from "sonner";
@@ -63,7 +64,7 @@ function MatrixSection() {
         supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order").eq("is_active", true).eq("is_leaf", true).order("sort_order").order("code"),
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
       ]);
-      return { depts: (depts ?? []) as Dept[], inds: (inds ?? []) as Indicator[], meas: (meas ?? []) as Meas[] };
+      return { depts: (depts ?? []) as Dept[], inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[] };
     },
   });
 
@@ -204,7 +205,7 @@ function AnnualReportSection() {
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
         supabase.from("corrective_actions").select("*").eq("fiscal_year", fiscalYear).order("created_at"),
       ]);
-      return { inds: (inds ?? []) as Indicator[], meas: (meas ?? []) as Meas[], capa: capa ?? [] };
+      return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[], capa: capa ?? [] };
     },
   });
 
