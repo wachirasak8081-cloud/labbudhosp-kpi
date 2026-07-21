@@ -33,7 +33,7 @@ function TargetsPage() {
     queryKey: ["targets", fiscalYear],
     queryFn: async () => {
       const [{ data: inds }, { data: hist }, { data: profiles }] = await Promise.all([
-        supabase.from("indicators").select("id, code, name_th, level, target_value, target_condition, unit").eq("is_active", true).order("code"),
+        supabase.from("indicators").select("id, code, name_th, level, target_value, target_condition, unit, sort_order, parent_id").eq("is_active", true).order("sort_order").order("code"),
         supabase.from("target_history").select("*").order("changed_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name"),
       ]);
