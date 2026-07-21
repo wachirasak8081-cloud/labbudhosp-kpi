@@ -40,7 +40,8 @@ function IndicatorsPage() {
         supabase.from("indicators").select("*").order("sort_order").order("code"),
         supabase.from("departments").select("id, name_th, code"),
       ]);
-      return { inds: (inds ?? []) as Indicator[], depts: depts ?? [] };
+      const { sortIndicators } = await import("@/lib/indicator-sort");
+      return { inds: sortIndicators((inds ?? []) as Indicator[]), depts: depts ?? [] };
     },
   });
 

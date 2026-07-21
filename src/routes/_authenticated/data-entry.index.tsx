@@ -77,7 +77,8 @@ function DataEntryPage() {
         supabase.from("measurements").select("*")
           .eq("fiscal_year", fiscalYear).eq("period_month", month),
       ]);
-      return { inds: (inds ?? []) as Indicator[], meas: (meas ?? []) as Measurement[] };
+      const { sortIndicators } = await import("@/lib/indicator-sort");
+      return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Measurement[] };
     },
   });
 
