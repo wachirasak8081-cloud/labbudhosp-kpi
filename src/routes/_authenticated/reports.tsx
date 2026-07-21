@@ -538,7 +538,7 @@ function CompareSection() {
         supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear),
         supabase.from("departments").select("id, name_th"),
       ]);
-      return { inds: (inds ?? []) as Indicator[], meas: (meas ?? []) as Meas[], depts: (depts ?? []) as Dept[] };
+      return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[], depts: (depts ?? []) as Dept[] };
     },
   });
 
