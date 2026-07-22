@@ -247,7 +247,7 @@ function DataEntryPage() {
                             className="h-8 text-right" />
                         </TableCell>
                         <TableCell className={`text-right ${colorCls}`}>
-                          {display != null ? display.toFixed(2) : "—"}
+                          {formatIndicatorValue(ind.code, display)}
                         </TableCell>
                         <TableCell className="text-right text-sm text-muted-foreground">
                           {targetSymbol(ind.target_condition)} {ind.target_value ?? "-"}{ind.unit ?? ""}

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from "recharts";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
+import { formatIndicatorValue, decimalsFor } from "@/lib/indicator-format";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -114,7 +115,7 @@ function IndicatorDetailPage() {
                     <TableCell className="text-sm">{THAI_MONTHS[i]}</TableCell>
                     <TableCell className="text-right text-sm">{m?.numerator ?? "—"}</TableCell>
                     <TableCell className="text-right text-sm">{m?.denominator ?? "—"}</TableCell>
-                    <TableCell className="text-right text-sm font-semibold">{m?.calculated_value != null ? Number(m.calculated_value).toFixed(2) : "—"}</TableCell>
+                    <TableCell className="text-right text-sm font-semibold">{formatIndicatorValue(ind.code, m?.calculated_value != null ? Number(m.calculated_value) : null)}</TableCell>
                     <TableCell><Badge variant="outline" className="text-xs">{m?.status ?? "—"}</Badge></TableCell>
                     <TableCell className="text-sm">{userName(m?.entered_by ?? null)}</TableCell>
                   </TableRow>
@@ -143,7 +144,7 @@ function IndicatorDetailPage() {
                     </TableCell>
                     {FISCAL_MONTH_TO_CAL.map((cm) => {
                       const m = data.childMeas.find((x: any) => x.indicator_id === c.id && x.period_month === cm);
-                      return <TableCell key={cm} className="text-center text-xs">{m?.calculated_value != null ? Number(m.calculated_value).toFixed(1) : "—"}</TableCell>;
+                      return <TableCell key={cm} className="text-center text-xs">{formatIndicatorValue(c.code, m?.calculated_value != null ? Number(m.calculated_value) : null)}</TableCell>;
                     })}
                   </TableRow>
                 ))}

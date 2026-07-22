@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { useAuth } from "@/hooks/use-auth";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
+import { formatIndicatorValue } from "@/lib/indicator-format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -142,7 +143,7 @@ function HistoryPage() {
                     <TableCell>{monthLabel(r.period_month)}</TableCell>
                     <TableCell className="font-mono text-xs">{r.indicator.code}</TableCell>
                     <TableCell className="text-sm">{r.indicator.name_th}</TableCell>
-                    <TableCell className="text-right">{r.calculated_value != null ? Number(r.calculated_value).toFixed(2) : "—"}</TableCell>
+                    <TableCell className="text-right">{formatIndicatorValue(r.indicator.code, r.calculated_value != null ? Number(r.calculated_value) : null)}</TableCell>
                     <TableCell>
                       {r.status === "draft" && <Badge variant="secondary">ฉบับร่าง</Badge>}
                       {r.status === "submitted" && <Badge className="bg-amber-500 hover:bg-amber-500">ส่งแล้ว</Badge>}

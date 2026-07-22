@@ -16,6 +16,7 @@ import { Download, Loader2, FileText, FileSpreadsheet, Eye, CheckCircle2, XCircl
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
 import { sortIndicators } from "@/lib/indicator-sort";
+import { decimalsFor } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from "recharts";
 import { toast } from "sonner";
@@ -98,10 +99,11 @@ function MatrixSection() {
     const header = ["รหัส", "ตัวชี้วัด", ...THAI_MONTHS, "เฉลี่ย", "เป้า", "สถานะ"];
     const lines = [header.join(",")];
     rows.forEach(({ ind, monthCells, avg, tone }) => {
+      const d = decimalsFor(ind.code);
       lines.push([
         ind.code, `"${ind.name_th}"`,
-        ...monthCells.map((c) => c.value == null ? "" : c.value.toFixed(2)),
-        avg != null ? avg.toFixed(2) : "",
+        ...monthCells.map((c) => c.value == null ? "" : c.value.toFixed(d)),
+        avg != null ? avg.toFixed(d) : "",
         ind.target_value != null ? `${targetSymbol(ind.target_condition)}${ind.target_value}` : "",
         statusLabel(tone),
       ].join(","));
@@ -223,10 +225,11 @@ function AnnualReportSection() {
         const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
         const avg = avgOf(monthly);
         const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
+        const dO = decimalsFor(o.code);
         objRows.push([
           `${o.code} ${o.name_th}`,
-          ...monthly.map((v) => v == null ? "" : Number(v.toFixed(2))),
-          avg == null ? "" : Number(avg.toFixed(2)),
+          ...monthly.map((v) => v == null ? "" : Number(v.toFixed(dO))),
+          avg == null ? "" : Number(avg.toFixed(dO)),
           o.target_value != null ? `${targetSymbol(o.target_condition)}${o.target_value}` : "",
           statusLabel(tone),
         ]);
@@ -245,10 +248,11 @@ function AnnualReportSection() {
           });
           const avg = avgOf(monthly);
           const tone = toneFor(avg, ind.target_value, ind.target_condition, ind.is_inverted);
+          const dI = decimalsFor(ind.code);
           rows.push([
             ind.code, ind.name_th,
-            ...monthly.map((v) => v == null ? "" : Number(v.toFixed(2))),
-            avg == null ? "" : Number(avg.toFixed(2)),
+            ...monthly.map((v) => v == null ? "" : Number(v.toFixed(dI))),
+            avg == null ? "" : Number(avg.toFixed(dI)),
             ind.target_value != null ? `${targetSymbol(ind.target_condition)}${ind.target_value}` : "",
             statusLabel(tone),
           ]);
@@ -416,8 +420,8 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                   return (
                     <tr key={o.id}>
                       <td className="border p-2"><div className="font-medium">{o.code} {o.name_th}</div></td>
-                      {monthly.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, o.target_value, o.target_condition, o.is_inverted)))}>{v == null ? "—" : v.toFixed(1)}</td>)}
-                      <td className={cn("border p-1 text-center font-bold", toneBg(tone))}>{avg == null ? "—" : avg.toFixed(2)}</td>
+                      {monthly.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, o.target_value, o.target_condition, o.is_inverted)))}>{v == null ? "—" : v.toFixed(decimalsFor(o.code))}</td>)}
+                      <td className={cn("border p-1 text-center font-bold", toneBg(tone))}>{avg == null ? "—" : avg.toFixed(decimalsFor(o.code))}</td>
                       <td className="border p-1 text-center">{o.target_value ?? "—"}</td>
                       <td className={cn("border p-1 text-center font-semibold", toneBg(tone))}>{statusLabel(tone)}</td>
                     </tr>
@@ -437,10 +441,10 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
             return (
               <div key={kpi.id} data-page className="border rounded-lg p-6 bg-white">
                 <h3 className="text-base font-bold mb-1">{kpi.code} {kpi.name_th}</h3>
-                <p className="text-xs text-gray-600 mb-3">เป้าหมาย: {targetSymbol(kpi.target_condition)}{kpi.target_value ?? "—"}{kpi.unit ?? "%"} • เฉลี่ย: {avg == null ? "—" : avg.toFixed(2)}% • <span className={cn("font-semibold", tone === "green" ? "text-emerald-700" : tone === "yellow" ? "text-amber-700" : tone === "red" ? "text-rose-700" : "")}>{statusLabel(tone)}</span></p>
+                <p className="text-xs text-gray-600 mb-3">เป้าหมาย: {targetSymbol(kpi.target_condition)}{kpi.target_value ?? "—"}{kpi.unit ?? "%"} • เฉลี่ย: {avg == null ? "—" : avg.toFixed(decimalsFor(kpi.code))}% • <span className={cn("font-semibold", tone === "green" ? "text-emerald-700" : tone === "yellow" ? "text-amber-700" : tone === "red" ? "text-rose-700" : "")}>{statusLabel(tone)}</span></p>
                 <table className="w-full text-xs border-collapse mb-4">
                   <thead><tr className="bg-gray-100">{THAI_MONTHS.map((m) => <th key={m} className="border p-1">{m}</th>)}<th className="border p-1">เฉลี่ย</th></tr></thead>
-                  <tbody><tr>{monthly.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, kpi.target_value, kpi.target_condition, kpi.is_inverted)))}>{v == null ? "—" : v.toFixed(1)}</td>)}<td className={cn("border p-1 text-center font-bold", toneBg(tone))}>{avg == null ? "—" : avg.toFixed(2)}</td></tr></tbody>
+                  <tbody><tr>{monthly.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, kpi.target_value, kpi.target_condition, kpi.is_inverted)))}>{v == null ? "—" : v.toFixed(decimalsFor(kpi.code))}</td>)}<td className={cn("border p-1 text-center font-bold", toneBg(tone))}>{avg == null ? "—" : avg.toFixed(decimalsFor(kpi.code))}</td></tr></tbody>
                 </table>
                 <div style={{ width: "100%", height: 180 }}>
                   <ResponsiveContainer>
@@ -469,8 +473,8 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                           return (
                             <tr key={l.id}>
                               <td className="border p-1">{l.code} {l.name_th}</td>
-                              {lm.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, l.target_value, l.target_condition, l.is_inverted)))}>{v == null ? "—" : v.toFixed(1)}</td>)}
-                              <td className={cn("border p-1 text-center font-bold", toneBg(toneFor(la, l.target_value, l.target_condition, l.is_inverted)))}>{la == null ? "—" : la.toFixed(2)}</td>
+                              {lm.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, l.target_value, l.target_condition, l.is_inverted)))}>{v == null ? "—" : v.toFixed(decimalsFor(l.code))}</td>)}
+                              <td className={cn("border p-1 text-center font-bold", toneBg(toneFor(la, l.target_value, l.target_condition, l.is_inverted)))}>{la == null ? "—" : la.toFixed(decimalsFor(l.code))}</td>
                             </tr>
                           );
                         })}
