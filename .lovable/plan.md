@@ -1,102 +1,121 @@
-# แผนพัฒนา CAPA / PDCA ครบทั้ง Tab A–E
+# Plan: ปรับ Dashboard ตาม PDF และจัดลำดับการคำนวณให้ตรง Excel
 
-**ค่าเริ่มต้นที่ผมจะใช้** (ตอบแทนตามคำแนะนำในข้อความก่อน — บอกได้ถ้าอยากเปลี่ยน):
-- Storage: **ส่วนตัว** (private bucket `capa-docs`) + signed URL 1 ชม.
-- Kanban: **ลากได้** ด้วย `@dnd-kit/core`
-- ข้อมูลเดิม: ตาราง `corrective_actions` ว่างอยู่แล้ว → เพิ่มฟิลด์ใหม่แบบ nullable ไม่ต้อง migrate
+## เป้าหมาย
+- เปลี่ยน `Dashboard` ให้มีเลย์เอาต์ สี และข้อมูลตรงตามไฟล์ `Dash_KPI.pdf` (หน้า 1-3)
+- ทำให้การคำนวณและแสดงตัวเลขทุกหน้าตรงกับโครงสร้าง/สูตรใน `indicators-export-2026-07-22.xlsx`
+- รองรับตัวชี้วัดความถี่ `yearly` (กรอกครั้งเดียวต่อปี แล้วนำค่าเดิมมาเฉลี่ยกับรายเดือน)
+- เมื่อชี้ (hover) ที่กราฟ Dashboard KPI ทุกเส้น ให้ Tooltip แสดงข้อมูลรายเดือน
 
----
+## 1. Database / Schema (migration)
 
-## 1. Database (migration เดียว)
+### 1.1 ตารางเก็บค่า Objective ย้อนหลังรายปี
+สร้าง `public.annual_objective_summary`:
+- `id` (uuid), `objective_id` (FK → indicators), `fiscal_year` (int), `value` (numeric), `created_at`, `updated_at`
+- GRANT + RLS + `update_updated_at` trigger
 
-**ขยาย `corrective_actions`** เพิ่มฟิลด์ (nullable):
-- `severity` ('low'|'medium'|'high'|'critical'), `priority` ('P1'|'P2'|'P3'|'P4')
-- `nc_source` ('kpi_below_target'|'iqa'|'eqa'|'complaint'|'audit'|'incident'|'manual')
-- `nc_detected_date`, `nc_detected_by`
-- `rca_method` ('5why'|'fishbone'|'pareto'|'other'), `rca_data` (jsonb — เก็บ 5-why steps / fishbone 6M categories)
-- `containment_action` (text) — การแก้ไขทันที
-- `pdca_phase` ('plan'|'do'|'check'|'act'), `approval_status` ('draft'|'pending_manager'|'approved'|'rejected')
-- `approved_by`, `approved_at`, `rejection_reason`
-- `verification_before`, `verification_1m`, `verification_3m` (numeric) — ค่า KPI ก่อน/หลัง
-- `effectiveness` ('effective'|'partial'|'ineffective'), `closed_at`
+เป้าหมาย: แยกค่าสรุปรายปีของ Objective (ที่ไม่ได้คำนวณจาก leaf ได้โดยตรง) ออกจาก `measurements` เพื่อแสดงตาราง 2566-2569 ในหน้า Dashboard
 
-**ตารางใหม่:**
-- `capa_attachments` — id, capa_id (FK), file_name, storage_path, mime_type, size_bytes, uploaded_by, uploaded_at
-- `capa_documents` (คลัง WI สำหรับ Tab E) — id, title, doc_code, related_indicator_id, tags text[], storage_path, version, updated_at
-- `capa_comments` — id, capa_id, user_id, comment, created_at (สำหรับ approval flow)
+### 1.2 ปรับ backend function คำนวณ
+แก้ไข `public.recompute_parent_measurement`:
+- KPI4: `100 - AVG(QI4.1, QI4.2)` เก็บด้วย precision สูง (numeric ไม่ rounded)
+- ตัวชี้วัด `frequency='yearly'`: ถ้าเดือนใดไม่มีค่า ให้ใช้ค่าล่าสุดในปีงบประมาณเดียวกันมาเฉลี่ย (carry-forward) แทนการถือเป็น 0/null
+- คง logic อื่นไว้
 
-**RLS:** staff อ่าน/เขียนเฉพาะสาขาตน, manager อนุมัติ, auditor อ่านอย่างเดียว, admin ทำได้ทุกอย่าง
-**Storage:** bucket `capa-docs` (private) + policies ผูกกับ role
-**Auto-populate trigger:** เมื่อ `measurements.calculated_value < target` และยังไม่มี CAPA เปิดอยู่ → insert row `nc_source='kpi_below_target'`, `approval_status='draft'`
+แก้ไข `public.measurements_compute_leaf`:
+- รับรอง QI4.1/QI4.2: `(numerator/denominator)*100` เก็บ precision สูง
 
----
+## 2. Dashboard (`src/routes/_authenticated/dashboard.tsx`) — redesign
 
-## 2. UI — `src/routes/_authenticated/capa.tsx` (rebuild)
+### 2.1 Header
+- ชื่อหน้า: `แดชบอร์ดภาพรวม`
+- ตัวกรอง: `ทั้งปี` / เดือน ตามลำดับเดือนงบประมาณ
+- แสดงปีงบประมาณ + ผู้ใช้/สิทธิ์
 
-โครง: `<Tabs>` 5 แท็บด้านบน + FY/dept filter ด้านขวา
+### 2.2 Objective Cards (1-4)
+จัดวางเป็นกริด 4 ใบ (ตาม PDF):
+- ชื่อ Objective, ค่าปัจจุบัน, เป้าหมาย, ไฟกระพริบสี
+- เทียบเดือนก่อน (ค่า + ส่วนต่าง)
+- คำนวณจาก KPI/QI/sub-QI ที่เกี่ยวข้อง โดยรวมตัวชี้วัด `yearly` เข้าเฉลี่ยด้วย
 
-### Tab A — 📋 Nonconformity Log
-- ตาราง auto-populated จาก KPI ที่ค่า < target ในเดือนล่าสุด
-- คอลัมน์: KPI, ค่าจริง/เป้า, ช่องว่าง (gap), severity (auto: gap>10=critical, >5=high, >2=medium, else low), สาขา, วันตรวจพบ, สถานะ CAPA, ปุ่ม [เปิด RCA]
-- Filter: FY, เดือน, severity, สาขา, มี/ยังไม่มี CAPA
-- ปุ่ม "+ บันทึก NC manual" สำหรับ IQA/EQA/complaint
+### 2.3 ตารางเปรียบเทียบปี 2566-2569
+แสดงตาราง 4 ปีย้อนหลัง (objective × ปี) ดึงจาก `annual_objective_summary`:
+- ใช้ค่าจาก PDF หน้า 1:
+  - 2566: 98.63 / 84.81 / 85.68 / 92.15
+  - 2567: 97.85 / 86.45 / 93.27 / 91.36
+  - 2568: 98.46 / 86.58 / 95.92 / 91.89
+  - 2569 (ต.ค.68-มี.ค.69): 96.90 / 89.13 / 96.91 / 93.25
 
-### Tab B — 🔍 Root Cause Analysis (RCA)
-- รายการ CAPA ที่อยู่ในเฟส Plan
-- คลิกเปิด Dialog ฟอร์ม RCA เต็มจอ:
-  - ข้อมูล NC (readonly จาก Tab A)
-  - **Containment action** (แก้ไขทันที)
-  - เลือกวิธี RCA: **5-Why** (5 ช่อง why→because) หรือ **Fishbone** (6M: Man/Machine/Method/Material/Measurement/Environment แต่ละหมวดมี list สาเหตุ)
-  - เก็บเป็น jsonb ใน `rca_data`
-  - แผนแก้ไข (action_plan), ผู้รับผิดชอบ, กำหนดเสร็จ, priority
-  - แนบไฟล์ (upload → `capa-docs` → บันทึกใน `capa_attachments`)
-  - ปุ่ม "ส่งขออนุมัติ" → `approval_status='pending_manager'`, `pdca_phase='do'`
+### 2.4 KPI Cards (KPI1-KPI11)
+แสดงเป็น cards แบบ PDF (หน้า 2):
+- ชื่อ KPI, หมวดที่, ค่า, สถานะผ่าน/ไม่ผ่าน, เป้าหมาย, ค่าเฉลี่ย, ส่วนต่างจากเป้า, trend รายเดือน, `เดือนที่ผ่านเกณฑ์: X/Y เดือน`
+- Click card → ไป `/dashboard/indicator/$id` ซึ่งแสดง QI/Sub-QI ที่เกี่ยวข้อง
 
-### Tab C — 📊 Action Tracking (Kanban)
-- 4 คอลัมน์: **รออนุมัติ / กำลังดำเนินการ / รอตรวจสอบผล / เสร็จสิ้น**
-- การ์ด: KPI code, ปัญหาย่อ, ผู้รับผิดชอบ, due date (แดงถ้าเลย), severity badge
-- ลากข้ามคอลัมน์ด้วย `@dnd-kit` → update `pdca_phase`
-- manager ลากไป "กำลังดำเนินการ" = อนุมัติ (auto set `approved_by/at`)
-- คลิกการ์ด → drawer แก้ไข + comment thread
+### 2.5 KPI Matrix รายเดือน
+ตาราง 12 เดือน × KPI11 (ตาม PDF หน้า 1) พร้อมสีพื้นหลังตามเงื่อนไขเป้าหมาย
 
-### Tab D — ✅ Verification & Effectiveness
-- ตารางยืนยันประสิทธิผล: KPI | ก่อน | หลัง 1 เดือน | หลัง 3 เดือน | ผล (effective/partial/ineffective)
-- Auto-populate `verification_before` จาก measurement ของเดือนที่พบ NC, `verification_1m/3m` จาก measurements ถัดมา
-- ปุ่ม "ประเมินประสิทธิผล" → เลือก effective → auto close CAPA (`pdca_phase='act'`, `status='closed'`)
+### 2.6 กราฟเส้น KPI รายเดือน + Hover Tooltip
+- ปรับ Recharts `<LineChart>` ให้มี Tooltip แสดงค่าทุก KPI ในเดือนนั้น
+- เมื่อ hover ที่จุดบนเส้น แสดงชื่อ KPI, เดือน, ค่า, เป้าหมาย, สถานะผ่าน/ไม่ผ่าน
+- ใช้ `formatIndicatorValue` เพื่อแสดง KPI4/QI4.1/QI4.2 4 ทศนิยม
 
-### Tab E — 📁 Knowledge Base
-- ตาราง `capa_documents`: ชื่อ, รหัสเอกสาร, KPI ที่เกี่ยวข้อง, tags, version, updated_at, ปุ่มดาวน์โหลด (signed URL)
-- Search + filter tags (chip): IQC, EQA, TAT, Safety, Blood Bank, ...
-- ปุ่ม "+ อัปโหลดเอกสาร" (admin/manager)
+### 2.7 Alert Panel + สถิติการบันทึก
+คงส่วน “ตัวชี้วัดที่ไม่ผ่านเกณฑ์” และ “สถิติการบันทึก” ไว้ ปรับให้สอดคล้องกับ PDF หน้า 3
 
----
+## 3. การคำนวณและฟอร์แมตตัวเลขในทุกหน้า
 
-## 3. Files
+### 3.1 Utility ใหม่
+สร้าง `src/lib/indicator-format.ts`:
+```
+formatIndicatorValue(code: string, value: number | null): string
+```
+- KPI4 / QI4.1 / QI4.2 → 4 ทศนิยม
+- ตัวชี้วัดอื่น → 2 ทศนิยม
 
-**New/edit:**
-- migration (1 ครั้ง — schema + RLS + trigger auto-populate)
-- storage bucket `capa-docs` (private)
-- `src/routes/_authenticated/capa.tsx` (rewrite ครบ 5 tabs)
-- `src/components/capa/` — `nc-log-tab.tsx`, `rca-tab.tsx`, `rca-dialog.tsx`, `kanban-tab.tsx`, `verification-tab.tsx`, `kb-tab.tsx`, `attachment-uploader.tsx`
-- `src/lib/capa-helpers.ts` — severity calc, RCA schema types
-- `bun add @dnd-kit/core @dnd-kit/sortable`
+### 3.2 หน้าที่นำไปใช้
+- Dashboard
+- Reports (matrix, annual, recording, compare)
+- Data Entry
+- Indicator Detail (`dashboard/indicator/$id`)
+- Targets
+- CAPA
 
-## 4. Technical notes
-- Kanban drag → optimistic update + mutation
-- ไฟล์แนบดึงผ่าน `supabase.storage.from('capa-docs').createSignedUrl(path, 3600)`
-- ทุกฟิลด์ใหม่ nullable → หน้าเดิม (basic CAPA form) ยังใช้ได้
-- ใช้ `has_role()` ใน RLS สำหรับ approval flow
+### 3.3 สถานะ/สี
+ยึดตาม `src/lib/indicator-status.ts`:
+- green = ผ่าน, yellow = ใกล้เกณฑ์ ±2%, red = ต่ำกว่า
+- รองรับ `is_inverted` เช่น QI4.1/QI4.2 (ยิ่งน้อยยิ่งดี)
 
-## 5. ขอบเขตที่ **ไม่ทำ** ในรอบนี้
-- ไม่ทำ email notification (แจ้งเตือนคนรับผิดชอบทาง email)
-- ไม่ทำ audit trail แยกของ CAPA (ใช้ `audit_logs` เดิม)
-- ไม่รองรับ collaborative real-time editing
+## 4. รองรับตัวชี้วัด `yearly`
 
----
+### 4.1 ฝั่ง Backend
+- ปรับ `recompute_parent_measurement` ให้เติมค่า `yearly` ที่เดือนอื่นโดยใช้ค่าเดียวกัน (carry-forward) ก่อนคำนวณค่าเฉลี่ย
 
-**พอกด "อนุมัติแผน" ผมจะ:**
-1. รัน migration + สร้าง bucket
-2. เขียนหน้า UI ทั้ง 5 tabs + components
-3. ทดสอบ build
+### 4.2 ฝั่ง Data Entry
+- ใน `src/routes/_authenticated/data-entry.index.tsx`:
+  - ตัวชี้วัด `yearly` แสดงเฉพาะเดือนเริ่มต้นปีงบประมาณ (ต.ค.)
+  - หรือแสดงทุกเดือนแต่ล็อกให้ใช้ค่าเดียวกัน (editable ที่เดือนแรก แล้วอัปเดตทุกเดือน)
+  - คำนวณ/แสดงผลด้วยสูตรเดิม
 
-ระบุถ้าอยากปรับส่วนไหน (เช่น ตัด Kanban เหลือ dropdown, หรือทำเฉพาะ Tab A+B ก่อน) ก่อนผมเริ่มลุย
+## 5. ข้อมูลตัวอย่าง (seed)
+
+### 5.1 Objective historical data
+ใช้ `supabase--insert` เพิ่มค่า objective ปี 2566-2569 จาก PDF หน้า 1 ลง `annual_objective_summary` (หลัง migration สร้างตาราง)
+
+### 5.2 ตรวจสอบ indicators ตรง Excel
+ตรวจสอบว่า `indicators` ใน DB ตรงกับ Excel ทั้ง 144 รายการ (โดยเฉพาะ parent_code, formula, target, frequency, is_inverted) — ถ้าไม่ตรง ให้ปรับผ่าน insert/update
+
+## 6. ไฟล์ที่แก้ไข/สร้าง
+- `src/routes/_authenticated/dashboard.tsx` (redesign)
+- `src/lib/indicator-format.ts` (ใหม่)
+- `src/routes/_authenticated/reports.tsx`
+- `src/routes/_authenticated/data-entry.index.tsx`
+- `src/routes/_authenticated/dashboard.indicator.$id.tsx`
+- `src/routes/_authenticated/targets.tsx`
+- `src/routes/_authenticated/capa.tsx`
+- migration: `annual_objective_summary` + แก้ functions
+
+## 7. ตรวจสอบ
+- Dashboard ตรง PDF ทุกส่วน
+- Hover บนกราฟ KPI แสดง Tooltip รายเดือน
+- ค่า KPI4/QI4.1/QI4.2 แสดง 4 ทศนิยมทุกหน้า
+- ตัวชี้วัด `yearly` เฉลี่ยได้ถูกต้อง
+- การเรียงลำดับ Objective → KPI → QI → sub-QI ยังคงใช้ `sortIndicators` อยู่
