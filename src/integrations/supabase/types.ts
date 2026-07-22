@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      annual_objective_summary: {
+        Row: {
+          created_at: string
+          fiscal_year: number
+          id: string
+          note: string | null
+          objective_id: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          fiscal_year: number
+          id?: string
+          note?: string | null
+          objective_id: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          fiscal_year?: number
+          id?: string
+          note?: string | null
+          objective_id?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "annual_objective_summary_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "indicators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
