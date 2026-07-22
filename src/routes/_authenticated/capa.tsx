@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
+import { formatIndicatorValue, decimalsFor } from "@/lib/indicator-format";
 import {
   APPROVAL_LABEL, EFFECTIVENESS_LABEL, NC_SOURCE_LABEL, PDCA_LABEL, SEVERITY_LABEL, SEVERITY_TONE,
   calcSeverity,
@@ -208,7 +209,7 @@ function NcLogTab({ capa, inds, depts, meas, onOpen, fiscalYear }: {
                   </TableCell>
                   <TableCell className="text-xs">{NC_SOURCE_LABEL[c.nc_source as keyof typeof NC_SOURCE_LABEL] ?? "—"}</TableCell>
                   <TableCell className="text-xs">
-                    {val != null ? val.toFixed(1) : "—"} / {ind?.target_value?.toFixed(1) ?? "—"}
+                    {formatIndicatorValue(ind?.code, val != null ? Number(val) : null)} / {ind?.target_value?.toFixed(decimalsFor(ind?.code)) ?? "—"}
                   </TableCell>
                   <TableCell>
                     {c.severity && <Badge className={SEVERITY_TONE[c.severity as keyof typeof SEVERITY_TONE]}>{SEVERITY_LABEL[c.severity as keyof typeof SEVERITY_LABEL]}</Badge>}
@@ -311,10 +312,10 @@ function VerificationTab({ capa, inds, meas, onOpen }: {
                   <div className="text-sm font-medium">{ind?.name_th}</div>
                   <div className="text-xs font-mono text-muted-foreground">{ind?.code}</div>
                 </TableCell>
-                <TableCell className="text-xs">{ind?.target_value?.toFixed(1) ?? "—"}</TableCell>
-                <TableCell className="font-mono text-sm">{before?.toFixed(1) ?? "—"}</TableCell>
-                <TableCell className="font-mono text-sm">{m1?.toFixed(1) ?? "—"}</TableCell>
-                <TableCell className="font-mono text-sm">{m3?.toFixed(1) ?? "—"}</TableCell>
+                <TableCell className="text-xs">{ind?.target_value?.toFixed(decimalsFor(ind?.code)) ?? "—"}</TableCell>
+                <TableCell className="font-mono text-sm">{formatIndicatorValue(ind?.code, before != null ? Number(before) : null)}</TableCell>
+                <TableCell className="font-mono text-sm">{formatIndicatorValue(ind?.code, m1 != null ? Number(m1) : null)}</TableCell>
+                <TableCell className="font-mono text-sm">{formatIndicatorValue(ind?.code, m3 != null ? Number(m3) : null)}</TableCell>
                 <TableCell>
                   <Select value={c.effectiveness ?? ""} onValueChange={(v) => setEff.mutate({ id: c.id, eff: v })}>
                     <SelectTrigger className="w-[140px] h-8"><SelectValue placeholder="—" /></SelectTrigger>

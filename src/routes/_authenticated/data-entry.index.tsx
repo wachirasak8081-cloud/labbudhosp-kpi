@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { useAuth } from "@/hooks/use-auth";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
+import { formatIndicatorValue } from "@/lib/indicator-format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -247,7 +248,7 @@ function DataEntryPage() {
                             className="h-8 text-right" />
                         </TableCell>
                         <TableCell className={`text-right ${colorCls}`}>
-                          {display != null ? display.toFixed(2) : "—"}
+                          {formatIndicatorValue(ind.code, display)}
                         </TableCell>
                         <TableCell className="text-right text-sm text-muted-foreground">
                           {targetSymbol(ind.target_condition)} {ind.target_value ?? "-"}{ind.unit ?? ""}
