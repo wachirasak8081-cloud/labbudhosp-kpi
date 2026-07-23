@@ -16,8 +16,8 @@ export function toneFor(
     return "red";
   }
   if (cond === "eq") {
+    // exact-target rule (per mockup): pass only when value matches target
     if (Math.abs(diff) < 0.001) return "green";
-    if (Math.abs(diff) <= 2) return "yellow";
     return "red";
   }
   if (v >= target) return "green";

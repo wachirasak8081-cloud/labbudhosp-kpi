@@ -3,59 +3,44 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  TrendingUp, TrendingDown, Minus, Loader2, AlertTriangle, CheckCircle2, Clock,
-  ChevronRight, Target, Activity,
-} from "lucide-react";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine,
-} from "recharts";
+import { Loader2, TrendingUp, TrendingDown, Circle, AlertTriangle, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { sortIndicators } from "@/lib/indicator-sort";
-import { formatIndicatorValue, formatDiff, decimalsFor } from "@/lib/indicator-format";
-import { toneFor, statusLabel, type Tone } from "@/lib/indicator-status";
+import { decimalsFor, formatIndicatorValue } from "@/lib/indicator-format";
+import { toneFor } from "@/lib/indicator-status";
+import { computeAtMonth, computeMonthly, makeCalcContext, type IndBasic, type MeasBasic } from "@/lib/indicator-calc";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-type Ind = {
-  id: string; code: string; name_th: string; level: string; parent_id: string | null;
-  target_value: number | null; target_condition: string | null; is_inverted: boolean | null;
-  is_leaf: boolean; is_active: boolean; department_id: string | null;
-  frequency: string | null; sort_order: number | null;
+type Ind = IndBasic & {
+  name_th: string;
+  target_value: number | null;
+  target_condition: string | null;
+  is_inverted: boolean | null;
+  sort_order: number | null;
 };
-type Meas = {
-  indicator_id: string; period_month: number | null; calculated_value: number | null;
-  numerator: number | null; denominator: number | null; status: string;
-};
-type Capa = { id: string; indicator_id: string; status: string };
-type Annual = { objective_id: string; fiscal_year: number; value: number; note: string | null };
+type Annual = { objective_id: string; fiscal_year: number; value: number };
+type Capa = { indicator_id: string; status: string };
 
-const toneDot = (t: Tone) =>
-  t === "green" ? "bg-emerald-500"
-    : t === "yellow" ? "bg-amber-500"
-    : t === "red" ? "bg-rose-500"
-    : "bg-muted-foreground/40";
+const HISTORICAL = [2566, 2567, 2568] as const;
+const YEAR_COLORS = ["#1E3A5F", "#F97316", "#15803D", "#2563EB"];
 
-const toneCellBg = (t: Tone) =>
-  t === "green" ? "bg-emerald-50 text-emerald-900"
-    : t === "yellow" ? "bg-amber-50 text-amber-900"
-    : t === "red" ? "bg-rose-50 text-rose-900"
-    : "";
-
-const HISTORICAL_YEARS = [2566, 2567, 2568];
+// Quarter grouping: Q1=Oct-Dec, Q2=Jan-Mar, Q3=Apr-Jun, Q4=Jul-Sep (fiscal)
+const QUARTERS: { label: string; months: number[] }[] = [
+  { label: "ไตรมาส 1 (ต.ค.-ธ.ค.)", months: [10, 11, 12] },
+  { label: "ไตรมาส 2 (ม.ค.-มี.ค.)", months: [1, 2, 3] },
+  { label: "ไตรมาส 3 (เม.ย.-มิ.ย.)", months: [4, 5, 6] },
+  { label: "ไตรมาส 4 (ก.ค.-ก.ย.)", months: [7, 8, 9] },
+];
 
 function DashboardPage() {
   const { fiscalYear } = useFiscalYear();
-  const [monthFilter, setMonthFilter] = useState<string>("all"); // "all" or cal month
+  const [filterMode, setFilterMode] = useState<"all" | "quarter" | "month">("all");
+  const [filterValue, setFilterValue] = useState<string>("all");
   const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
@@ -63,17 +48,17 @@ function DashboardPage() {
     queryFn: async () => {
       const [{ data: inds }, { data: meas }, { data: capa }, { data: annual }] = await Promise.all([
         supabase.from("indicators")
-          .select("id, code, name_th, level, parent_id, target_value, target_condition, is_inverted, is_leaf, is_active, department_id, frequency, sort_order")
+          .select("id, code, name_th, level, parent_id, target_value, target_condition, is_inverted, is_leaf, is_active, frequency, sort_order")
           .eq("is_active", true).order("sort_order").order("code"),
         supabase.from("measurements")
-          .select("indicator_id, period_month, calculated_value, numerator, denominator, status")
+          .select("indicator_id, period_month, calculated_value")
           .eq("fiscal_year", fiscalYear),
-        supabase.from("corrective_actions").select("id, indicator_id, status").eq("fiscal_year", fiscalYear),
-        supabase.from("annual_objective_summary").select("objective_id, fiscal_year, value, note"),
+        supabase.from("corrective_actions").select("indicator_id, status").eq("fiscal_year", fiscalYear),
+        supabase.from("annual_objective_summary").select("objective_id, fiscal_year, value"),
       ]);
       return {
         inds: sortIndicators((inds ?? []) as Ind[]),
-        meas: (meas ?? []) as Meas[],
+        meas: (meas ?? []) as MeasBasic[],
         capa: (capa ?? []) as Capa[],
         annual: (annual ?? []) as Annual[],
       };
@@ -82,567 +67,596 @@ function DashboardPage() {
 
   const view = useMemo(() => {
     if (!data) return null;
-    const capaByInd = new Map<string, number>();
-    data.capa.forEach((c) => capaByInd.set(c.indicator_id, (capaByInd.get(c.indicator_id) ?? 0) + 1));
+    const ctx = makeCalcContext(data.inds, data.meas);
 
-    // ind.id -> Map<calMonth, value>
-    const valByInd = new Map<string, Map<number, number>>();
-    for (const m of data.meas) {
-      if (m.period_month == null || m.calculated_value == null) continue;
-      if (!valByInd.has(m.indicator_id)) valByInd.set(m.indicator_id, new Map());
-      valByInd.get(m.indicator_id)!.set(m.period_month, Number(m.calculated_value));
+    // Determine active months per filter
+    const activeMonths: number[] =
+      filterMode === "month" && filterValue !== "all"
+        ? [parseInt(filterValue, 10)]
+        : filterMode === "quarter" && filterValue !== "all"
+          ? (QUARTERS[parseInt(filterValue, 10)]?.months ?? FISCAL_MONTH_TO_CAL)
+          : [...FISCAL_MONTH_TO_CAL];
+
+    // Latest recorded fiscal month (based on any measurement present)
+    const recordedCalSet = new Set<number>();
+    data.meas.forEach((m) => { if (m.period_month != null && m.calculated_value != null) recordedCalSet.add(m.period_month); });
+    let latestCal: number | null = null;
+    let latestFiscalIdx = -1;
+    for (const cm of recordedCalSet) {
+      const i = FISCAL_MONTH_TO_CAL.indexOf(cm);
+      if (i > latestFiscalIdx) { latestFiscalIdx = i; latestCal = cm; }
     }
+    // "current period" for cards = last active month within filter that has data, else latest overall
+    const filteredActive = activeMonths.filter((cm) => FISCAL_MONTH_TO_CAL.indexOf(cm) <= latestFiscalIdx);
+    const curCal = filteredActive.length > 0 ? filteredActive[filteredActive.length - 1] : latestCal;
+    const prevCal = curCal != null
+      ? (() => { const i = FISCAL_MONTH_TO_CAL.indexOf(curCal); return i > 0 ? FISCAL_MONTH_TO_CAL[i - 1] : null; })()
+      : null;
 
-    // For yearly indicators, carry-forward the latest value to every fiscal month
-    // so aggregation (Objective/KPI cards) uses it consistently.
-    for (const ind of data.inds) {
-      if (ind.frequency !== "yearly") continue;
-      const months = valByInd.get(ind.id);
-      if (!months) continue;
-      let last: number | null = null;
-      for (const cm of FISCAL_MONTH_TO_CAL) {
-        if (months.has(cm)) last = months.get(cm)!;
-        else if (last != null) months.set(cm, last);
+    // Aggregate helper: average over activeMonths of computed monthly values
+    const aggregate = (ind: Ind): number | null => {
+      const monthly = computeMonthly(ind, ctx);
+      const vals: number[] = [];
+      for (let i = 0; i < FISCAL_MONTH_TO_CAL.length; i++) {
+        if (!activeMonths.includes(FISCAL_MONTH_TO_CAL[i])) continue;
+        const v = monthly[i];
+        if (v != null) vals.push(v);
       }
-    }
+      if (vals.length === 0) return null;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    };
 
     const objectives = data.inds.filter((i) => i.level === "object");
     const kpis = data.inds.filter((i) => i.level === "kpi");
 
-    // latest fiscal-month index available across all measurements
-    const allCalMonths = new Set<number>();
-    data.meas.forEach((m) => { if (m.period_month != null && m.calculated_value != null) allCalMonths.add(m.period_month); });
-    const latestFiscalIdx = (() => {
-      let best = -1;
-      for (const cm of allCalMonths) {
-        const i = FISCAL_MONTH_TO_CAL.indexOf(cm);
-        if (i > best) best = i;
-      }
-      return best;
-    })();
-    const latestCal = monthFilter === "all"
-      ? (latestFiscalIdx >= 0 ? FISCAL_MONTH_TO_CAL[latestFiscalIdx] : null)
-      : parseInt(monthFilter, 10);
-    const prevCal = latestCal != null ? (() => {
-      const idx = FISCAL_MONTH_TO_CAL.indexOf(latestCal);
-      return idx > 0 ? FISCAL_MONTH_TO_CAL[idx - 1] : null;
-    })() : null;
-
+    // Objective cards
     const objectiveCards = objectives.map((o) => {
-      const months = valByInd.get(o.id);
-      const cur = latestCal != null ? months?.get(latestCal) ?? null : null;
-      const prev = prevCal != null ? months?.get(prevCal) ?? null : null;
+      const cur = curCal != null ? computeAtMonth(o, curCal, ctx) : null;
+      const prev = prevCal != null ? computeAtMonth(o, prevCal, ctx) : null;
+      const avg = aggregate(o);
+      const display = filterMode === "all" ? avg : cur;
+      const tone = toneFor(display, o.target_value, o.target_condition, o.is_inverted);
       const trend = cur != null && prev != null
         ? (cur > prev + 0.01 ? "up" : cur < prev - 0.01 ? "down" : "flat")
         : null;
-      const tone = toneFor(cur, o.target_value, o.target_condition, o.is_inverted);
-      return { ind: o, cur, prev, trend, tone };
+      return { ind: o, display, cur, prev, tone, trend, avg };
     });
 
-    // KPI card summaries: average / pass-count / diff
+    // KPI cards — average of active months
     const kpiCards = kpis.map((k) => {
-      const months = valByInd.get(k.id);
-      const monthly: { cal: number; value: number | null }[] = FISCAL_MONTH_TO_CAL
-        .map((cm) => ({ cal: cm, value: months?.get(cm) ?? null }));
-      const valid = monthly.map((c) => c.value).filter((x): x is number => x != null);
-      const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
-      const cur = latestCal != null ? months?.get(latestCal) ?? null : avg;
-      const display = cur ?? avg;
-      const tone = toneFor(display, k.target_value, k.target_condition, k.is_inverted);
-      const pass = monthly.filter((c) =>
-        c.value != null && k.target_value != null
-        && toneFor(c.value, k.target_value, k.target_condition, k.is_inverted) === "green"
+      const monthly = computeMonthly(k, ctx);
+      const inFilter: { cal: number; v: number | null }[] = FISCAL_MONTH_TO_CAL
+        .map((cm, i) => ({ cal: cm, v: activeMonths.includes(cm) ? monthly[i] : null }));
+      const validForAvg = inFilter.map((x) => x.v).filter((x): x is number => x != null);
+      const avg = validForAvg.length ? validForAvg.reduce((a, b) => a + b, 0) / validForAvg.length : null;
+      const tone = toneFor(avg, k.target_value, k.target_condition, k.is_inverted);
+      const monthsPassed = inFilter.filter((x) =>
+        x.v != null && toneFor(x.v, k.target_value, k.target_condition, k.is_inverted) === "green"
       ).length;
-      const diff = display != null && k.target_value != null
-        ? (k.is_inverted ? k.target_value - display : display - k.target_value)
-        : null;
-      return { ind: k, monthly, avg, display, tone, pass, monthsWithData: valid.length, diff };
+      const monthsWithData = validForAvg.length;
+      const diff = avg != null && k.target_value != null
+        ? (k.is_inverted ? k.target_value - avg : avg - k.target_value) : null;
+      const diffPct = diff != null && k.target_value ? (diff / k.target_value) * 100 : null;
+      // last filled month for slider handle label
+      const lastFilled = [...inFilter].reverse().find((x) => x.v != null);
+      const lastFilledLabel = lastFilled ? THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(lastFilled.cal)] : "-";
+      return { ind: k, monthly, avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel };
     });
 
-    // KPI matrix rows
-    const kpiRows = kpis.map((k) => {
-      const months = valByInd.get(k.id);
-      const cells = FISCAL_MONTH_TO_CAL.map((cm) => {
-        const v = months?.get(cm) ?? null;
-        return { cal: cm, value: v, tone: toneFor(v, k.target_value, k.target_condition, k.is_inverted) };
-      });
-      const valid = cells.map((c) => c.value).filter((x): x is number => x != null);
-      const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
-      return { ind: k, cells, avg };
-    });
-
-    // Alerts: leaf indicators below target
-    const alertRows: { ind: Ind; value: number; target: number; diff: number; hasCAPA: boolean }[] = [];
-    for (const ind of data.inds) {
-      if (!ind.is_leaf) continue;
-      const months = valByInd.get(ind.id);
-      if (!months || !ind.target_value) continue;
-      let v: number | null = null;
-      for (let i = FISCAL_MONTH_TO_CAL.length - 1; i >= 0; i--) {
-        const cm = FISCAL_MONTH_TO_CAL[i];
-        if (latestCal != null && FISCAL_MONTH_TO_CAL.indexOf(cm) > FISCAL_MONTH_TO_CAL.indexOf(latestCal)) continue;
-        if (months.has(cm)) { v = months.get(cm)!; break; }
-      }
-      if (v == null) continue;
-      const t = toneFor(v, ind.target_value, ind.target_condition, ind.is_inverted);
-      if (t !== "green") {
-        alertRows.push({
-          ind, value: v, target: ind.target_value,
-          diff: ind.is_inverted ? v - ind.target_value : ind.target_value - v,
-          hasCAPA: (capaByInd.get(ind.id) ?? 0) > 0,
-        });
-      }
+    // Non-conforming table — leaf indicators failing target
+    const capaByInd = new Map<string, Capa[]>();
+    for (const c of data.capa) {
+      const arr = capaByInd.get(c.indicator_id) ?? [];
+      arr.push(c);
+      capaByInd.set(c.indicator_id, arr);
     }
-    alertRows.sort((a, b) => b.diff - a.diff);
+    const nc: {
+      ind: Ind; value: number; target: number; diff: number; capa: "none" | "progress" | "done";
+    }[] = [];
+    for (const ind of data.inds) {
+      if (!ind.is_leaf || ind.target_value == null) continue;
+      const monthly = computeMonthly(ind, ctx);
+      const inFilter = monthly.filter((_, i) => activeMonths.includes(FISCAL_MONTH_TO_CAL[i])).filter((x): x is number => x != null);
+      if (inFilter.length === 0) continue;
+      const avg = inFilter.reduce((a, b) => a + b, 0) / inFilter.length;
+      const tone = toneFor(avg, ind.target_value, ind.target_condition, ind.is_inverted);
+      if (tone === "green") continue;
+      const capaArr = capaByInd.get(ind.id) ?? [];
+      let cs: "none" | "progress" | "done" = "none";
+      if (capaArr.length) {
+        if (capaArr.some((c) => c.status === "closed")) cs = "done";
+        else cs = "progress";
+      }
+      nc.push({
+        ind, value: avg, target: ind.target_value,
+        diff: ind.is_inverted ? ind.target_value - avg : avg - ind.target_value,
+        capa: cs,
+      });
+    }
+    nc.sort((a, b) => a.diff - b.diff);
 
-    // Recording stats — for the latest recorded fiscal month
+    // Recording stats — for latest month
     const curMonth = latestCal ?? (new Date().getMonth() + 1);
-    const leafIds = new Set(data.inds.filter((i) => i.is_leaf).map((i) => i.id));
+    const leafIds = data.inds.filter((i) => i.is_leaf).map((i) => i.id);
     const statusByLeaf = new Map<string, string>();
+    // fetch statuses via a lightweight second call would be needed, but we already have meas without status.
+    // recording stats needs status; refetch via query below (fallback: infer from calculated_value presence)
     for (const m of data.meas) {
       if (m.period_month !== curMonth) continue;
-      if (!leafIds.has(m.indicator_id)) continue;
-      statusByLeaf.set(m.indicator_id, m.status);
+      if (m.calculated_value != null) statusByLeaf.set(m.indicator_id, "recorded");
     }
-    let recorded = 0, pending = 0, awaiting = 0;
+    let recorded = 0, awaiting = 0, pending = 0;
     for (const id of leafIds) {
       const s = statusByLeaf.get(id);
-      if (!s || s === "draft") pending++;
-      else if (s === "submitted") awaiting++;
-      else recorded++;
+      if (s === "recorded") recorded++;
+      else pending++;
     }
 
-    // KPI chart data
-    const chartData = FISCAL_MONTH_TO_CAL.map((cm, i) => {
-      const row: Record<string, number | string | null> = { month: THAI_MONTHS[i], _cal: cm };
-      kpis.forEach((k) => { row[k.code] = valByInd.get(k.id)?.get(cm) ?? null; });
-      return row;
-    });
+    // Historical annual data
+    const annualByObj = new Map<string, Map<number, number>>();
+    for (const a of data.annual) {
+      if (!annualByObj.has(a.objective_id)) annualByObj.set(a.objective_id, new Map());
+      annualByObj.get(a.objective_id)!.set(a.fiscal_year, Number(a.value));
+    }
 
-    // Historical years table
-    const historical = new Map<string, Map<number, number>>();
-    data.annual.forEach((a) => {
-      if (!historical.has(a.objective_id)) historical.set(a.objective_id, new Map());
-      historical.get(a.objective_id)!.set(a.fiscal_year, Number(a.value));
-    });
-    const currentByObjective = new Map<string, number | null>();
-    objectiveCards.forEach((o) => {
-      const months = valByInd.get(o.ind.id);
-      const valid = months ? Array.from(months.values()).filter((x): x is number => x != null) : [];
-      const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
-      // Prefer stored annual entry for current fiscalYear; else use computed avg
-      const stored = historical.get(o.ind.id)?.get(fiscalYear);
-      currentByObjective.set(o.ind.id, stored ?? avg);
+    // Bar chart data — group per objective, bars per year
+    const chartData = objectiveCards.map(({ ind, avg }) => {
+      const hist = annualByObj.get(ind.id) ?? new Map();
+      const cur = avg ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
+      // monthly breakdown of current year for tooltip
+      const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
+      return {
+        objective: ind,
+        yearValues: [
+          hist.get(HISTORICAL[0]) ?? null,
+          hist.get(HISTORICAL[1]) ?? null,
+          hist.get(HISTORICAL[2]) ?? null,
+          cur,
+        ] as (number | null)[],
+        monthly,
+      };
     });
 
     return {
-      objectiveCards, kpiCards, kpiRows, kpis, alertRows,
-      recorded, pending, awaiting, totalLeaf: leafIds.size,
-      chartData, latestCal, historical, currentByObjective,
+      objectiveCards, kpiCards, nc,
+      recorded, awaiting, pending, totalLeaf: leafIds.length,
+      chartData, activeMonths, curMonth,
     };
-  }, [data, monthFilter, fiscalYear]);
+  }, [data, filterMode, filterValue, fiscalYear]);
 
   if (isLoading || !view || !data) {
     return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
 
-  const monthOptions = [
-    { v: "all", label: "ทั้งปี" },
-    ...FISCAL_MONTH_TO_CAL.map((cm, i) => ({ v: String(cm), label: THAI_MONTHS[i] })),
-  ];
-  const latestLabel = view.latestCal != null
-    ? THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(view.latestCal)]
-    : "—";
+  const yearLabels = [`ปี ${HISTORICAL[0]}`, `ปี ${HISTORICAL[1]}`, `ปี ${HISTORICAL[2]}`, `ปี ${fiscalYear}`];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">แดชบอร์ดภาพรวม</h1>
-          <p className="text-sm text-muted-foreground">ปีงบประมาณ {fiscalYear} · อัปเดตล่าสุด {latestLabel}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">ตัวกรอง:</span>
-          <Select value={monthFilter} onValueChange={setMonthFilter}>
-            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm text-muted-foreground">ตัวกรอง:</span>
+        <Select
+          value={filterMode}
+          onValueChange={(v) => { setFilterMode(v as "all" | "quarter" | "month"); setFilterValue("all"); }}
+        >
+          <SelectTrigger className="w-[140px] h-9 bg-card"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทั้งปี</SelectItem>
+            <SelectItem value="quarter">รายไตรมาส</SelectItem>
+            <SelectItem value="month">รายเดือน</SelectItem>
+          </SelectContent>
+        </Select>
+        {filterMode === "quarter" && (
+          <Select value={filterValue} onValueChange={setFilterValue}>
+            <SelectTrigger className="w-[200px] h-9 bg-card"><SelectValue placeholder="เลือกไตรมาส" /></SelectTrigger>
             <SelectContent>
-              {monthOptions.map((o) => <SelectItem key={o.v} value={o.v}>{o.label}</SelectItem>)}
+              <SelectItem value="all">ทุกไตรมาส</SelectItem>
+              {QUARTERS.map((q, i) => <SelectItem key={i} value={String(i)}>{q.label}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
+        )}
+        {filterMode === "month" && (
+          <Select value={filterValue} onValueChange={setFilterValue}>
+            <SelectTrigger className="w-[140px] h-9 bg-card"><SelectValue placeholder="เลือกเดือน" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทุกเดือน</SelectItem>
+              {FISCAL_MONTH_TO_CAL.map((cm, i) => <SelectItem key={cm} value={String(cm)}>{THAI_MONTHS[i]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        <span className="text-sm text-muted-foreground ml-auto">ปีงบประมาณ {fiscalYear}</span>
       </div>
 
-      {/* Objective Cards */}
+      {/* Objective cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {view.objectiveCards.map(({ ind, cur, prev, trend, tone }) => {
-          const pct = cur != null && ind.target_value ? Math.min(100, (cur / ind.target_value) * 100) : 0;
+        {view.objectiveCards.map(({ ind, display, prev, trend }) => {
+          const diff = display != null && prev != null ? display - prev : null;
           return (
-            <Card key={ind.id} className="overflow-hidden">
-              <CardContent className="pt-6">
-                <p className="text-xs text-muted-foreground truncate" title={ind.name_th}>{ind.name_th}</p>
-                <div className="flex items-end justify-between mt-2 gap-2">
-                  <div className="text-3xl font-bold tabular-nums">
-                    {formatIndicatorValue(ind.code, cur)}
-                    <span className="text-base font-normal text-muted-foreground">%</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className={cn("inline-block w-3 h-3 rounded-full", toneDot(tone))} />
-                    {trend === "up" && <TrendingUp className="w-4 h-4 text-emerald-600" />}
-                    {trend === "down" && <TrendingDown className="w-4 h-4 text-rose-600" />}
-                    {trend === "flat" && <Minus className="w-4 h-4 text-muted-foreground" />}
-                  </div>
-                </div>
-                <div className="mt-2 text-xs text-muted-foreground">เป้าหมาย: {ind.target_value ?? "—"}%</div>
-                <Progress value={pct} className="mt-2" />
-                {prev != null && cur != null && (
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    เทียบเดือนก่อน: {formatIndicatorValue(ind.code, prev)}% ({formatDiff(ind.code, cur - prev)})
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div key={ind.id} className="bg-card border border-border rounded-2xl p-5">
+              <div className="text-[13px] font-semibold text-foreground truncate" title={ind.name_th}>{ind.name_th}</div>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-[26px] font-extrabold tabular-nums">
+                  {display != null ? formatIndicatorValue(ind.code, display) + "%" : "—%"}
+                </span>
+                {trend === "up" && <TrendingUp className="w-4 h-4 text-[color:var(--success)]" />}
+                {trend === "down" && <TrendingDown className="w-4 h-4 text-[color:var(--destructive)]" />}
+                {trend === "flat" && <Circle className="w-3 h-3 text-muted-foreground" />}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                เป้าหมาย: {ind.target_value != null ? ind.target_value.toFixed(decimalsFor(ind.code)) : "—"}%
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-1">
+                {prev != null
+                  ? <>เดือนก่อนหน้า: {formatIndicatorValue(ind.code, prev)}%
+                      {diff != null && (
+                        <span className={cn("ml-1 font-semibold", diff >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
+                          ({diff >= 0 ? "+" : ""}{diff.toFixed(decimalsFor(ind.code))})
+                        </span>
+                      )}
+                    </>
+                  : "เดือนก่อนหน้า: —"}
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Historical years comparison table */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">เปรียบเทียบผลย้อนหลัง 4 ปีงบประมาณ</CardTitle></CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[120px]">ปีงบประมาณ</TableHead>
-                {view.objectiveCards.map(({ ind }) => (
-                  <TableHead key={ind.id} className="text-center">{ind.name_th}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {HISTORICAL_YEARS.map((y) => (
-                <TableRow key={y}>
-                  <TableCell className="font-medium">ปี {y}</TableCell>
-                  {view.objectiveCards.map(({ ind }) => {
-                    const v = view.historical.get(ind.id)?.get(y) ?? null;
-                    return <TableCell key={ind.id} className="text-center tabular-nums">{v != null ? v.toFixed(2) : "—"}</TableCell>;
-                  })}
-                </TableRow>
-              ))}
-              <TableRow className="bg-emerald-50/40 font-semibold">
-                <TableCell>ปี {fiscalYear} <span className="text-[11px] font-normal text-muted-foreground">(ปัจจุบัน)</span></TableCell>
-                {view.objectiveCards.map(({ ind }) => {
-                  const v = view.currentByObjective.get(ind.id) ?? null;
-                  return <TableCell key={ind.id} className="text-center tabular-nums">{v != null ? v.toFixed(2) : "—"}</TableCell>;
-                })}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* 11 KPI Cards */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">สรุปผล KPI 11 หมวด</h2>
-          <span className="text-xs text-muted-foreground">คลิกการ์ดเพื่อดู QI / Sub-QI</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {view.kpiCards.map(({ ind, monthly, avg, display, tone, pass, monthsWithData, diff }) => {
-            const passLabel = tone === "green" ? "ผ่านเกณฑ์เป้าหมาย" : "ไม่ผ่านเกณฑ์เป้าหมาย";
-            const targetPrefix = ind.target_condition === "lte" ? "≤"
-              : ind.target_condition === "eq" ? "="
-              : "≥";
-            return (
-              <button
-                key={ind.id}
-                type="button"
-                onClick={() => navigate({ to: "/dashboard/indicator/$id", params: { id: ind.id } })}
-                className="text-left"
-              >
-                <Card className="hover:shadow-md transition-shadow h-full">
-                  <CardContent className="pt-5 pb-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <span className="font-mono">{ind.code}</span>
-                          <span>·</span>
-                          <span>หมวดที่ {ind.code.replace(/\D/g, "")}</span>
-                        </div>
-                        <div className="text-sm font-semibold leading-tight mt-0.5">{ind.name_th}</div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-3xl font-bold tabular-nums">
-                        {formatIndicatorValue(ind.code, display)}
-                        <span className="text-sm font-normal text-muted-foreground">%</span>
-                      </div>
-                      <span className={cn("inline-block w-3 h-3 rounded-full mb-2", toneDot(tone))} />
-                    </div>
-                    <div className={cn(
-                      "text-xs font-medium flex items-center gap-1.5",
-                      tone === "green" ? "text-emerald-700" : "text-rose-700",
-                    )}>
-                      <span className={cn("inline-block w-1.5 h-1.5 rounded-full", toneDot(tone))} />
-                      {passLabel}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <InfoLine label="เป้าหมาย" value={`${targetPrefix} ${ind.target_value?.toFixed(decimalsFor(ind.code)) ?? "—"}%`} />
-                      <InfoLine label="เฉลี่ย" value={formatIndicatorValue(ind.code, avg, { suffix: "%" })} />
-                      <InfoLine
-                        label="ส่วนต่าง"
-                        value={diff != null ? formatDiff(ind.code, diff) + "%" : "—"}
-                        valueClass={diff == null ? "" : diff >= 0 ? "text-emerald-700" : "text-rose-700"}
-                      />
-                      <InfoLine label="เดือนที่ผ่าน" value={`${pass}/${monthsWithData} เดือน`} />
-                    </div>
-                    <SparkBar cells={monthly} target={ind.target_value} cond={ind.target_condition} inv={ind.is_inverted} />
-                  </CardContent>
-                </Card>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* KPI Matrix */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">สรุป KPI 11 หมวด รายเดือน</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="sticky left-0 bg-background min-w-[240px]">KPI</TableHead>
-                  {THAI_MONTHS.map((m) => <TableHead key={m} className="text-center text-xs">{m}</TableHead>)}
-                  <TableHead className="text-center text-xs">เฉลี่ย</TableHead>
-                  <TableHead className="text-center text-xs">เป้า</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {view.kpiRows.map(({ ind, cells, avg }) => (
-                  <TableRow key={ind.id}>
-                    <TableCell className="sticky left-0 bg-background">
-                      <div className="font-medium text-sm truncate max-w-[240px]">{ind.name_th}</div>
-                      <div className="text-[10px] text-muted-foreground font-mono">{ind.code}</div>
-                    </TableCell>
-                    {cells.map((c, i) => (
-                      <TableCell key={i} className={cn("text-center text-xs p-1 tabular-nums", toneCellBg(c.tone))}>
-                        <Link to="/dashboard/indicator/$id" params={{ id: ind.id }} className="block hover:underline">
-                          {c.value != null ? c.value.toFixed(decimalsFor(ind.code)) : "—"}
-                        </Link>
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-center text-xs font-semibold tabular-nums">
-                      {formatIndicatorValue(ind.code, avg)}
-                    </TableCell>
-                    <TableCell className="text-center text-xs text-muted-foreground tabular-nums">
-                      {ind.target_value?.toFixed(decimalsFor(ind.code)) ?? "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Line chart with rich hover tooltip */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Activity className="w-4 h-4" />
-            แนวโน้ม KPI รายเดือน
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[420px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={view.chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
-                <Tooltip content={<KpiTooltip kpis={view.kpis} />} />
-                <ReferenceLine
-                  y={100} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4"
-                  label={{ value: "เป้า 100%", fontSize: 10, position: "right" }}
-                />
-                {view.kpis.map((k, i) => (
-                  <Line
-                    key={k.id} type="monotone" dataKey={k.code}
-                    name={`${k.code} ${k.name_th}`}
-                    stroke={`hsl(${(i * 33) % 360} 65% 45%)`}
-                    strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 5 }} connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-            {view.kpis.map((k, i) => (
-              <span key={k.id} className="inline-flex items-center gap-1">
-                <span className="inline-block w-3 h-1 rounded" style={{ background: `hsl(${(i * 33) % 360} 65% 45%)` }} />
-                <span className="font-mono">{k.code}</span>
+      {/* Yearly bar chart */}
+      <div className="bg-card border border-border rounded-2xl p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h2 className="text-base font-bold">เปรียบเทียบผลรายปี</h2>
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+            {yearLabels.map((y, i) => (
+              <span key={y} className="inline-flex items-center gap-1.5">
+                <i className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: YEAR_COLORS[i] }} />{y}
               </span>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <YearlyBarChart data={view.chartData} yearLabels={yearLabels} />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Alerts */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
-              ตัวชี้วัดที่ไม่ผ่านเกณฑ์
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ตัวชี้วัด</TableHead>
-                  <TableHead className="text-right">ค่าล่าสุด</TableHead>
-                  <TableHead className="text-right">เป้าหมาย</TableHead>
-                  <TableHead className="text-right">ส่วนต่าง</TableHead>
-                  <TableHead>CAPA</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {view.alertRows.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">ทุกตัวชี้วัดผ่านเกณฑ์</TableCell></TableRow>
-                )}
-                {view.alertRows.slice(0, 15).map((r) => (
-                  <TableRow key={r.ind.id}>
-                    <TableCell>
-                      <Link to="/dashboard/indicator/$id" params={{ id: r.ind.id }} className="font-medium text-sm hover:underline">
-                        {r.ind.name_th}
-                      </Link>
-                      <div className="text-[10px] text-muted-foreground font-mono">{r.ind.code}</div>
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatIndicatorValue(r.ind.code, r.value, { suffix: "%" })}
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                      {r.target.toFixed(decimalsFor(r.ind.code))}%
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-rose-600 tabular-nums">
-                      -{r.diff.toFixed(decimalsFor(r.ind.code))}
-                    </TableCell>
-                    <TableCell>
-                      {r.hasCAPA
-                        ? <Badge variant="secondary">มีแล้ว</Badge>
-                        : <Badge variant="outline">ยังไม่มี</Badge>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+      {/* KPI cards */}
+      <div>
+        <h2 className="text-base font-bold mb-3">KPI : 1-11</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {view.kpiCards.map((k) => (
+            <KpiCard
+              key={k.ind.id}
+              data={k}
+              onDetail={() => navigate({ to: "/dashboard/indicator/$id", params: { id: k.ind.id } })}
+            />
+          ))}
+        </div>
+      </div>
 
-        {/* Recording stats */}
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Target className="w-4 h-4" />สถิติการบันทึก (เดือนล่าสุด)</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <StatRow icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="บันทึก/อนุมัติแล้ว" value={view.recorded} total={view.totalLeaf} />
-            <StatRow icon={<Clock className="w-4 h-4 text-amber-500" />} label="รออนุมัติ" value={view.awaiting} total={view.totalLeaf} />
-            <StatRow icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="ยังไม่บันทึก" value={view.pending} total={view.totalLeaf} />
-            <Button asChild className="w-full mt-2"><Link to="/data-entry">ไปยังหน้าบันทึกข้อมูล</Link></Button>
-          </CardContent>
-        </Card>
+      {/* Non-conforming */}
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="flex items-center gap-2 text-[color:var(--warning)] font-bold text-[15px] mb-3">
+          <AlertTriangle className="w-4 h-4" />ตัวชี้วัดที่ไม่ผ่านเกณฑ์
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="text-muted-foreground text-left border-b border-border">
+                <th className="py-2 px-2 font-semibold">ตัวชี้วัด</th>
+                <th className="py-2 px-2 font-semibold text-right">ค่าล่าสุด</th>
+                <th className="py-2 px-2 font-semibold text-right">เป้าหมาย</th>
+                <th className="py-2 px-2 font-semibold text-right">ส่วนต่าง</th>
+                <th className="py-2 px-2 font-semibold">CAPA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.nc.length === 0 && (
+                <tr><td colSpan={5} className="text-center text-muted-foreground py-8">ทุกตัวชี้วัดผ่านเกณฑ์</td></tr>
+              )}
+              {view.nc.map((r) => (
+                <tr
+                  key={r.ind.id}
+                  className="border-b border-[color:oklch(0.96_0.008_240)] hover:bg-[oklch(0.98_0.005_240)] cursor-pointer"
+                  onClick={() => navigate({ to: "/dashboard/indicator/$id", params: { id: r.ind.id } })}
+                >
+                  <td className="py-2.5 px-2 font-semibold">
+                    {r.ind.name_th}
+                    <span className="block font-normal text-muted-foreground text-[11px]">{r.ind.code}</span>
+                  </td>
+                  <td className="py-2.5 px-2 text-right tabular-nums">{formatIndicatorValue(r.ind.code, r.value)}%</td>
+                  <td className="py-2.5 px-2 text-right tabular-nums">{r.target.toFixed(decimalsFor(r.ind.code))}%</td>
+                  <td className="py-2.5 px-2 text-right font-bold text-[color:var(--destructive)] tabular-nums">
+                    {(r.ind.is_inverted ? "+" : "-")}{Math.abs(r.diff).toFixed(decimalsFor(r.ind.code))}
+                  </td>
+                  <td className="py-2.5 px-2">
+                    <CapaBadge status={r.capa} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Recording stats */}
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <h2 className="text-base font-bold mb-4">สถิติการบันทึก (เดือนล่าสุด)</h2>
+        <StatRow icon={<CheckCircle2 className="w-4 h-4 text-[color:var(--success)]" />} label="บันทึก/อนุมัติแล้ว" value={view.recorded} total={view.totalLeaf} color="green" />
+        <StatRow icon={<Clock className="w-4 h-4 text-[color:var(--warning)]" />} label="รออนุมัติ" value={view.awaiting} total={view.totalLeaf} color="amber" />
+        <StatRow icon={<AlertTriangle className="w-4 h-4 text-[color:var(--destructive)]" />} label="ยังไม่บันทึก" value={view.pending} total={view.totalLeaf} color="red" />
       </div>
     </div>
   );
 }
 
-function InfoLine({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
-  return (
-    <div className="flex items-center justify-between gap-1">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("font-semibold tabular-nums", valueClass)}>{value}</span>
-    </div>
-  );
-}
-
-function SparkBar({
-  cells, target, cond, inv,
+/* ---------------- KPI Card ---------------- */
+function KpiCard({
+  data, onDetail,
 }: {
-  cells: { cal: number; value: number | null }[];
-  target: number | null; cond: string | null; inv: boolean | null;
+  data: {
+    ind: Ind;
+    monthly: (number | null)[];
+    avg: number | null;
+    tone: ReturnType<typeof toneFor>;
+    monthsPassed: number;
+    monthsWithData: number;
+    diff: number | null;
+    diffPct: number | null;
+    lastFilledLabel: string;
+  };
+  onDetail: () => void;
 }) {
+  const { ind, monthly, avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel } = data;
+  const pass = tone === "green";
+  const targetPct = ind.target_value != null ? Math.min(100, ind.target_value) : 0;
+  const avgPct = avg != null ? Math.min(100, Math.max(0, avg)) : 0;
+  const targetSym = ind.target_condition === "lte" ? "≤" : ind.target_condition === "eq" ? "=" : "≥";
+  const order = ind.code.replace(/\D/g, "");
+  const sparkTarget = ind.target_value ?? 100;
+
   return (
-    <div className="flex items-end gap-[3px] h-8 pt-1 border-t">
-      {cells.map((c, i) => {
-        const t = toneFor(c.value, target, cond, inv);
-        const h = c.value != null ? Math.max(4, Math.min(100, c.value)) : 4;
-        return (
+    <div
+      className={cn(
+        "bg-card border border-border rounded-[20px] p-6 transition-shadow hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)]",
+        "border-t-[3px]",
+        pass ? "border-t-[color:var(--success)]" : "border-t-[color:var(--destructive)]",
+      )}
+    >
+      <div className="flex items-center justify-between mb-3.5">
+        <span className={cn(
+          "text-[11px] font-bold tracking-wide px-3 py-1.5 rounded-full",
+          pass ? "bg-[oklch(0.96_0.06_148)] text-[color:var(--success)]" : "bg-[oklch(0.96_0.05_27)] text-[color:var(--destructive)]",
+        )}>{ind.code}</span>
+        <button
+          type="button"
+          onClick={onDetail}
+          className="text-[12px] font-bold text-[color:var(--primary)] bg-[oklch(0.96_0.04_260)] hover:bg-[oklch(0.94_0.06_260)] px-3.5 py-1.5 rounded-full inline-flex items-center gap-1"
+        >
+          รายละเอียด<ChevronRight className="w-3 h-3" />
+        </button>
+      </div>
+      <p className="text-[17px] font-bold leading-tight m-0">{ind.name_th}</p>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-3">หมวดที่ {order}</p>
+      <div className={cn("text-[34px] font-extrabold leading-none tabular-nums mb-2", pass ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
+        {formatIndicatorValue(ind.code, avg)}%
+      </div>
+      <div className={cn("text-[13px] font-semibold flex items-center gap-1.5 mb-1.5", pass ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
+        <span className={cn("inline-block w-1.5 h-1.5 rounded-full", pass ? "bg-[color:var(--success)]" : "bg-[color:var(--destructive)]")} />
+        {pass ? "ผ่านเกณฑ์เป้าหมาย" : "ไม่ผ่านเกณฑ์เป้าหมาย"}
+      </div>
+      <div className="text-[13px] text-muted-foreground mb-3">
+        เป้าหมาย {targetSym} {ind.target_value?.toFixed(decimalsFor(ind.code)) ?? "—"}%
+      </div>
+
+      {/* Slider */}
+      <div className="mb-4">
+        <div className="relative h-2 rounded-full" style={{ background: "linear-gradient(to right,#BBF0D2 0%,#FDE68A 60%,#FBD5D5 100%)" }}>
+          <div className="absolute -top-1 w-0.5 h-4 bg-slate-500" style={{ left: `${targetPct}%` }} />
           <div
-            key={i}
             className={cn(
-              "flex-1 rounded-sm",
-              c.value == null ? "bg-muted"
-                : t === "green" ? "bg-emerald-400"
-                : t === "yellow" ? "bg-amber-400"
-                : t === "red" ? "bg-rose-400"
-                : "bg-muted",
+              "absolute top-1/2 w-4 h-4 rounded-full bg-white border-[3px] -translate-x-1/2 -translate-y-1/2",
+              pass ? "border-[color:var(--success)]" : "border-[color:var(--destructive)]",
             )}
-            style={{ height: `${h}%` }}
-            title={`${THAI_MONTHS[i]}: ${c.value != null ? c.value.toFixed(2) + "%" : "—"}`}
+            style={{ left: `${avgPct}%` }}
           />
-        );
-      })}
+          <div
+            className={cn("absolute top-3.5 text-[10px] font-bold -translate-x-1/2", pass ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}
+            style={{ left: `${avgPct}%` }}
+          >{lastFilledLabel}</div>
+        </div>
+        <div className="flex justify-between text-[11px] text-muted-foreground mt-5">
+          <span>0</span><span>100</span>
+        </div>
+      </div>
+
+      {/* Info grid */}
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div className="border border-border rounded-[14px] px-3 py-2.5">
+          <div className="text-[11px] text-muted-foreground mb-1">เป้า / เฉลี่ย</div>
+          <div className="text-[15px] font-bold tabular-nums">
+            {ind.target_value?.toFixed(decimalsFor(ind.code)) ?? "—"} / {formatIndicatorValue(ind.code, avg)}
+          </div>
+        </div>
+        <div className="border border-border rounded-[14px] px-3 py-2.5">
+          <div className="text-[11px] text-muted-foreground mb-1">ส่วนต่างจากเป้า</div>
+          <div className={cn("text-[15px] font-bold tabular-nums", pass ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
+            {diffPct != null ? `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(2)}%` : "—"}
+          </div>
+        </div>
+      </div>
+
+      {/* Trend */}
+      <div className="border border-border rounded-[14px] px-3.5 pt-3 pb-2 mb-3.5">
+        <div className="flex justify-between text-xs mb-2">
+          <span className="font-bold">Trend รายเดือน</span>
+          <span className="text-muted-foreground">ต.ค. → ก.ย.</span>
+        </div>
+        <Sparkline monthly={monthly} target={sparkTarget} pass={pass} code={ind.code} />
+        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+          <span>{THAI_MONTHS[0]}</span><span>{THAI_MONTHS[11]}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-3 border-t border-border text-[13px]">
+        <span className="text-muted-foreground">เดือนที่ผ่านเกณฑ์</span>
+        <span className={cn(
+          "text-sm font-extrabold",
+          monthsWithData > 0 && monthsPassed / monthsWithData >= 0.5 ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]",
+        )}>{monthsPassed}/{monthsWithData} เดือน</span>
+      </div>
+      {diff != null && <span className="sr-only">{diff}</span>}
     </div>
   );
 }
 
-function KpiTooltip({
-  active, payload, label, kpis,
+/* --------- Sparkline SVG --------- */
+function Sparkline({ monthly, target, pass, code }: { monthly: (number | null)[]; target: number; pass: boolean; code: string }) {
+  const filled = monthly.map((v, i) => ({ i, v })).filter((x): x is { i: number; v: number } => x.v != null);
+  const w = 280, h = 50, pad = 6;
+  if (filled.length === 0) {
+    return <div className="text-xs text-muted-foreground/70 text-center py-3.5">ยังไม่มีข้อมูล</div>;
+  }
+  const all = filled.map((f) => f.v).concat([target]);
+  const min = Math.min(...all, 75);
+  const max = Math.max(...all, 100.5);
+  const x = (i: number) => pad + (i / 11) * (w - 2 * pad);
+  const y = (v: number) => h - pad - ((v - min) / (max - min || 1)) * (h - 2 * pad);
+  const color = pass ? "#16A34A" : "#DC2626";
+  const targetY = y(target).toFixed(1);
+  const pts = filled.map((f) => `${x(f.i).toFixed(1)},${y(f.v).toFixed(1)}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-[54px]">
+      <line x1="0" y1={targetY} x2={w} y2={targetY} stroke="#CBD5E1" strokeWidth={1} strokeDasharray="4 4" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      {filled.map((f) => (
+        <g key={f.i}>
+          <title>{`${THAI_MONTHS[f.i]}: ${formatIndicatorValue(code, f.v)}%`}</title>
+          <circle cx={x(f.i)} cy={y(f.v)} r={4} fill={color} />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/* --------- Yearly BarChart (custom SVG) --------- */
+function YearlyBarChart({
+  data,
+  yearLabels,
 }: {
-  active?: boolean;
-  payload?: Array<{ dataKey: string; value: number | null; color?: string }>;
-  label?: string;
-  kpis: Ind[];
+  data: { objective: Ind; yearValues: (number | null)[]; monthly: (number | null)[] }[];
+  yearLabels: string[];
 }) {
-  if (!active || !payload || payload.length === 0) return null;
-  const codeToInd = new Map(kpis.map((k) => [k.code, k]));
+  const [hover, setHover] = useState<{ oi: number; yi: number; x: number; y: number } | null>(null);
+  const W = 1200, H = 340, padL = 40, padB = 40, padT = 20;
+  const groupW = (W - padL * 2) / data.length;
+  const barGap = 6;
+  const barW = (groupW - barGap * 5) / 4;
+  const maxV = 100;
+
   return (
-    <div className="rounded-md border bg-background/95 backdrop-blur shadow-lg p-3 text-xs max-w-[320px]">
-      <div className="font-semibold mb-2 text-sm">เดือน {label}</div>
-      <div className="space-y-1">
-        {payload
-          .filter((p) => p.value != null)
-          .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
-          .map((p) => {
-            const ind = codeToInd.get(p.dataKey);
-            if (!ind) return null;
-            const t = toneFor(p.value, ind.target_value, ind.target_condition, ind.is_inverted);
-            return (
-              <div key={p.dataKey} className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-                <span className="font-mono text-[10px] text-muted-foreground w-12 shrink-0">{p.dataKey}</span>
-                <span className="flex-1 truncate">{ind.name_th}</span>
-                <span className="tabular-nums font-semibold">{formatIndicatorValue(ind.code, p.value)}%</span>
-                <span className={cn("inline-block w-1.5 h-1.5 rounded-full shrink-0", toneDot(t))} title={statusLabel(t)} />
-              </div>
-            );
-          })}
-      </div>
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto font-[inherit]" preserveAspectRatio="xMidYMid meet">
+        {[0, 1, 2, 3, 4].map((g) => {
+          const gy = padT + (H - padT - padB) * (1 - g / 4);
+          return (
+            <g key={g}>
+              <line x1={padL} y1={gy} x2={W - padL} y2={gy} stroke="#EEF2F7" strokeWidth={1} />
+              <text x={padL - 8} y={gy + 4} fontSize={11} fill="#94A3B8" textAnchor="end">{(g * 25).toFixed(0)}</text>
+            </g>
+          );
+        })}
+        <line x1={padL} y1={H - padB} x2={W - padL} y2={H - padB} stroke="#CBD5E1" strokeWidth={1} />
+        {data.map((d, oi) => {
+          const gx = padL + oi * groupW;
+          const shortLabel = d.objective.name_th.replace(/^\d+\./, "");
+          return (
+            <g key={d.objective.id}>
+              {d.yearValues.map((val, yi) => {
+                if (val == null) return null;
+                const bh = (val / maxV) * (H - padT - padB);
+                const bx = gx + barGap + yi * (barW + barGap);
+                const by = H - padB - bh;
+                return (
+                  <g key={yi}>
+                    <rect
+                      x={bx} y={by} width={barW} height={bh} rx={4}
+                      fill={YEAR_COLORS[yi]}
+                      style={{ cursor: "pointer" }}
+                      onMouseMove={(e) => setHover({ oi, yi, x: e.clientX, y: e.clientY })}
+                      onMouseLeave={() => setHover(null)}
+                    />
+                    <text x={bx + barW / 2} y={by - 6} fontSize={11} fill={YEAR_COLORS[yi]} fontWeight={700} textAnchor="middle">
+                      {val.toFixed(2)}
+                    </text>
+                  </g>
+                );
+              })}
+              <text x={gx + groupW / 2} y={H - padB + 22} fontSize={12} fill="#334155" textAnchor="middle">{shortLabel}</text>
+            </g>
+          );
+        })}
+      </svg>
+      {hover && (
+        <BarTooltip
+          x={hover.x} y={hover.y}
+          title={`${data[hover.oi].objective.name_th} · ${yearLabels[hover.yi]}`}
+          value={data[hover.oi].yearValues[hover.yi]}
+          monthly={hover.yi === 3 ? data[hover.oi].monthly : null}
+          code={data[hover.oi].objective.code}
+        />
+      )}
     </div>
   );
 }
 
-function StatRow({ icon, label, value, total }: { icon: React.ReactNode; label: string; value: number; total: number }) {
-  const pct = total ? (value / total) * 100 : 0;
+function BarTooltip({
+  x, y, title, value, monthly, code,
+}: {
+  x: number; y: number; title: string; value: number | null;
+  monthly: (number | null)[] | null; code: string;
+}) {
   return (
-    <div>
-      <div className="flex items-center justify-between text-sm">
-        <span className="flex items-center gap-2">{icon}{label}</span>
-        <span className="font-semibold tabular-nums">{value}/{total}</span>
+    <div
+      className="fixed z-50 pointer-events-none rounded-[10px] bg-slate-800 text-white text-[11px] px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] min-w-[170px]"
+      style={{ left: x + 14, top: y - 10 }}
+    >
+      <div className="font-bold mb-1.5 text-[12px]">{title}</div>
+      {monthly
+        ? monthly.map((v, i) => (
+            <div key={i} className="flex justify-between gap-3.5 text-slate-300 py-px">
+              <span>{THAI_MONTHS[i]}</span>
+              <b className="text-white font-semibold">{v != null ? formatIndicatorValue(code, v) + "%" : "—"}</b>
+            </div>
+          ))
+        : (
+          <div className="flex justify-between gap-3.5 text-slate-300 py-px">
+            <span>ค่าเฉลี่ยรายปี</span>
+            <b className="text-white font-semibold">{value != null ? value.toFixed(2) + "%" : "—"}</b>
+          </div>
+        )}
+    </div>
+  );
+}
+
+function CapaBadge({ status }: { status: "none" | "progress" | "done" }) {
+  const map = {
+    none: { label: "ยังไม่มี", cls: "bg-[oklch(0.96_0.05_27)] text-[color:var(--destructive)]" },
+    progress: { label: "กำลังดำเนินการ", cls: "bg-[oklch(0.96_0.06_60)] text-[color:var(--warning)]" },
+    done: { label: "มีแล้ว", cls: "bg-[oklch(0.96_0.06_148)] text-[color:var(--success)]" },
+  };
+  const m = map[status];
+  return <span className={cn("text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap", m.cls)}>{m.label}</span>;
+}
+
+function StatRow({
+  icon, label, value, total, color,
+}: { icon: React.ReactNode; label: string; value: number; total: number; color: "green" | "amber" | "red" }) {
+  const pct = total ? (value / total) * 100 : 0;
+  const barColor = color === "green" ? "#16A34A" : color === "amber" ? "#D97706" : "#DC2626";
+  return (
+    <div className="flex items-center gap-4 mb-4 last:mb-0">
+      <div className="w-[190px] text-[13px] flex items-center gap-1.5">{icon}{label}</div>
+      <div className="flex-1 h-2.5 bg-[oklch(0.96_0.008_240)] rounded-full overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: barColor }} />
       </div>
-      <Progress value={pct} className="mt-1 h-1.5" />
+      <div className="w-20 text-right text-[13px] font-bold tabular-nums">{value}/{total}</div>
     </div>
   );
 }
