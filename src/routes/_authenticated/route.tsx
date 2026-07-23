@@ -44,7 +44,7 @@ function AuthLayout() {
         <div className="flex min-h-screen w-full">
           <AppSidebar />
           <SidebarInset>
-            <header className="h-14 sticky top-0 z-30 flex items-center gap-3 border-b bg-background/95 backdrop-blur px-4">
+            <header className="h-14 sticky top-0 z-30 flex items-center gap-3 border-b bg-card/95 backdrop-blur px-4 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
               <SidebarTrigger />
               <h1 className="text-base font-semibold truncate">{title}</h1>
               <div className="ml-auto flex items-center gap-2">
@@ -52,7 +52,7 @@ function AuthLayout() {
                 <UserMenu />
               </div>
             </header>
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/30">
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-background">
               <Outlet />
             </main>
           </SidebarInset>
