@@ -38,18 +38,12 @@ export function buildLeafMonthly(
     if (!out.has(m.indicator_id)) out.set(m.indicator_id, new Map());
     out.get(m.indicator_id)!.set(m.period_month, Number(m.calculated_value));
   }
-  // yearly carry-forward
-  for (const [id, months] of out) {
-    const ind = byInd.get(id);
-    if (!ind || ind.frequency !== "yearly") continue;
-    let last: number | null = null;
-    for (const cm of FISCAL_MONTH_TO_CAL) {
-      if (months.has(cm)) last = months.get(cm)!;
-      else if (last != null) months.set(cm, last);
-    }
-  }
+  // Note: no yearly carry-forward — a yearly measurement represents the value
+  // at the month it was entered only. Parents aggregate month-by-month, so
+  // missing months bubble up as null instead of being filled by a stale value.
   return out;
 }
+
 
 /** Recursively resolve a value at a given fiscal month for any indicator. */
 export function computeAtMonth(
