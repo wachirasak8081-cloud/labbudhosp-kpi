@@ -522,6 +522,7 @@ function KpiCard({
 
 /* --------- Sparkline SVG --------- */
 function Sparkline({ monthly, target, pass, code }: { monthly: (number | null)[]; target: number; pass: boolean; code: string }) {
+  const [hoverI, setHoverI] = useState<number | null>(null);
   const filled = monthly.map((v, i) => ({ i, v })).filter((x): x is { i: number; v: number } => x.v != null);
   const w = 280, h = 50, pad = 6;
   if (filled.length === 0) {
@@ -535,17 +536,42 @@ function Sparkline({ monthly, target, pass, code }: { monthly: (number | null)[]
   const color = pass ? "#16A34A" : "#DC2626";
   const targetY = y(target).toFixed(1);
   const pts = filled.map((f) => `${x(f.i).toFixed(1)},${y(f.v).toFixed(1)}`).join(" ");
+  const hovered = hoverI != null ? filled.find((f) => f.i === hoverI) ?? null : null;
+  const leftPct = hovered ? (x(hovered.i) / w) * 100 : 0;
+  const nearRight = leftPct > 78;
+  const nearLeft = leftPct < 12;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-[54px]">
-      <line x1="0" y1={targetY} x2={w} y2={targetY} stroke="#CBD5E1" strokeWidth={1} strokeDasharray="4 4" />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-      {filled.map((f) => (
-        <g key={f.i}>
-          <title>{`${THAI_MONTHS[f.i]}: ${formatIndicatorValue(code, f.v)}%`}</title>
-          <circle cx={x(f.i)} cy={y(f.v)} r={4} fill={color} />
-        </g>
-      ))}
-    </svg>
+    <div className="relative" onMouseLeave={() => setHoverI(null)}>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-[54px] overflow-visible">
+        <line x1="0" y1={targetY} x2={w} y2={targetY} stroke="#CBD5E1" strokeWidth={1} strokeDasharray="4 4" />
+        <polyline points={pts} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        {filled.map((f) => (
+          <g key={f.i}>
+            <circle cx={x(f.i)} cy={y(f.v)} r={hoverI === f.i ? 5.5 : 4} fill={color} stroke="#fff" strokeWidth={hoverI === f.i ? 1.5 : 0} />
+            <rect
+              x={x(f.i) - 12} y={0} width={24} height={h}
+              fill="transparent"
+              onMouseEnter={() => setHoverI(f.i)}
+              onClick={() => setHoverI((prev) => (prev === f.i ? null : f.i))}
+              style={{ cursor: "pointer" }}
+            >
+              <title>{`${THAI_MONTHS[f.i]}: ${formatIndicatorValue(code, f.v)}%`}</title>
+            </rect>
+          </g>
+        ))}
+      </svg>
+      {hovered && (
+        <div
+          className="pointer-events-none absolute -top-1 z-10 whitespace-nowrap rounded-md bg-slate-900 text-white text-[11px] font-semibold px-2 py-1 shadow-lg"
+          style={{
+            left: `${leftPct}%`,
+            transform: `translate(${nearRight ? "-100%" : nearLeft ? "0%" : "-50%"}, -100%)`,
+          }}
+        >
+          {THAI_MONTHS[hovered.i]}: {formatIndicatorValue(code, hovered.v)}%
+        </div>
+      )}
+    </div>
   );
 }
 
