@@ -199,10 +199,24 @@ function DashboardPage() {
       annualByObj.get(a.objective_id)!.set(a.fiscal_year, Number(a.value));
     }
 
-    // Bar chart data — group per objective, bars per year
-    const chartData = objectiveCards.map(({ ind, avg }) => {
+    // KPI averages grouped by parent objective — used for current-year bar value
+    const kpiAvgByObj = new Map<string, number[]>();
+    for (const k of kpiCards) {
+      if (k.avg == null || !k.ind.parent_id) continue;
+      const arr = kpiAvgByObj.get(k.ind.parent_id) ?? [];
+      arr.push(k.avg);
+      kpiAvgByObj.set(k.ind.parent_id, arr);
+    }
+
+    // Bar chart data — group per objective, bars per year.
+    // Current-year value = average of KPI averages under this objective
+    // (KPI4 keeps its 100 - avg rule).
+    const chartData = objectiveCards.map(({ ind }) => {
       const hist = annualByObj.get(ind.id) ?? new Map();
-      const cur = avg ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
+      const kAvgs = kpiAvgByObj.get(ind.id) ?? [];
+      const kMean = kAvgs.length ? kAvgs.reduce((a, b) => a + b, 0) / kAvgs.length : null;
+      const curFromKpis = kMean == null ? null : (ind.code === "KPI4" ? 100 - kMean : kMean);
+      const cur = curFromKpis ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
       // monthly breakdown of current year for tooltip
       const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
       return {
@@ -612,10 +626,18 @@ function BarTooltip({
   x: number; y: number; title: string; value: number | null;
   monthly: (number | null)[] | null; code: string;
 }) {
+  const TT_W = 200;
+  const TT_H = monthly ? 260 : 70;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 768;
+  let left = x + 14;
+  if (left + TT_W + 8 > vw) left = Math.max(8, x - TT_W - 14);
+  let top = y - 10;
+  if (top + TT_H + 8 > vh) top = Math.max(8, vh - TT_H - 8);
   return (
     <div
-      className="fixed z-50 pointer-events-none rounded-[10px] bg-slate-800 text-white text-[11px] px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] min-w-[170px]"
-      style={{ left: x + 14, top: y - 10 }}
+      className="fixed z-50 pointer-events-none rounded-[10px] bg-slate-800 text-white text-[11px] px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)]"
+      style={{ left, top, width: TT_W }}
     >
       <div className="font-bold mb-1.5 text-[12px]">{title}</div>
       {monthly
