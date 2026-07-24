@@ -1,11 +1,9 @@
 // Derived value engine — computes every indicator recursively from leaf data.
 // Rules:
-//   - leaf: use measurement.calculated_value for the fiscal month.
-//     yearly frequency carries forward the last known value in the fiscal year.
+//   - leaf: use measurement.calculated_value at the month it was entered.
+//     No yearly carry-forward: a yearly measurement lives only in its entered month.
 //   - non-leaf: average of active children.
 //   - KPI4 special case: 100 - avg(children).
-
-import { FISCAL_MONTH_TO_CAL } from "./fiscal-year";
 
 export interface IndBasic {
   id: string;
@@ -26,23 +24,20 @@ export interface MeasBasic {
 // leafId -> Map<calMonth, value>
 export type MonthMap = Map<number, number>;
 
-/** Build leaf monthly value maps, with yearly carry-forward. */
+/** Build leaf monthly value maps (no carry-forward). */
 export function buildLeafMonthly(
-  inds: IndBasic[],
+  _inds: IndBasic[],
   meas: MeasBasic[],
 ): Map<string, MonthMap> {
-  const byInd = new Map<string, IndBasic>(inds.map((i) => [i.id, i]));
   const out = new Map<string, MonthMap>();
   for (const m of meas) {
     if (m.period_month == null || m.calculated_value == null) continue;
     if (!out.has(m.indicator_id)) out.set(m.indicator_id, new Map());
     out.get(m.indicator_id)!.set(m.period_month, Number(m.calculated_value));
   }
-  // Note: no yearly carry-forward — a yearly measurement represents the value
-  // at the month it was entered only. Parents aggregate month-by-month, so
-  // missing months bubble up as null instead of being filled by a stale value.
   return out;
 }
+
 
 
 /** Recursively resolve a value at a given fiscal month for any indicator. */
