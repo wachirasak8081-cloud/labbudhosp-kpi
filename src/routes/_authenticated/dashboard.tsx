@@ -626,10 +626,18 @@ function BarTooltip({
   x: number; y: number; title: string; value: number | null;
   monthly: (number | null)[] | null; code: string;
 }) {
+  const TT_W = 200;
+  const TT_H = monthly ? 260 : 70;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 768;
+  let left = x + 14;
+  if (left + TT_W + 8 > vw) left = Math.max(8, x - TT_W - 14);
+  let top = y - 10;
+  if (top + TT_H + 8 > vh) top = Math.max(8, vh - TT_H - 8);
   return (
     <div
-      className="fixed z-50 pointer-events-none rounded-[10px] bg-slate-800 text-white text-[11px] px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] min-w-[170px]"
-      style={{ left: x + 14, top: y - 10 }}
+      className="fixed z-50 pointer-events-none rounded-[10px] bg-slate-800 text-white text-[11px] px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)]"
+      style={{ left, top, width: TT_W }}
     >
       <div className="font-bold mb-1.5 text-[12px]">{title}</div>
       {monthly
