@@ -166,12 +166,17 @@ function MatrixSection() {
             </TableHeader>
             <TableBody>
               {rows.length === 0 && <TableRow><TableCell colSpan={16} className="text-center py-10 text-muted-foreground">ไม่มีข้อมูล</TableCell></TableRow>}
-              {rows.map(({ ind, monthCells, avg, sumN, sumD, tone }) => (
-                <TableRow key={ind.id} className="align-top">
+              {rows.map(({ ind, monthCells, avg, sumN, sumD, tone }) => {
+                const depth = LEVEL_DEPTH[ind.level] ?? 3;
+                return (
+                <TableRow key={ind.id} className={cn("align-top", depth === 0 && "bg-primary/5", depth === 1 && "bg-muted/30")}>
                   <TableCell className="sticky left-0 bg-card z-10 border-r">
-                    <div className="text-sm font-medium leading-tight">{ind.name_th}</div>
-                    <div className="text-xs text-muted-foreground font-mono mt-0.5">{ind.code}</div>
+                    <div style={{ paddingLeft: depth * 14 }}>
+                      <div className={cn("text-sm leading-tight", depth <= 1 ? "font-bold" : "font-medium")}>{ind.name_th}</div>
+                      <div className="text-xs text-muted-foreground font-mono mt-0.5">{ind.code}</div>
+                    </div>
                   </TableCell>
+
                   {monthCells.map((c, i) => (
                     <MatrixCell key={i} value={c.value} numerator={c.numerator} denominator={c.denominator} ind={ind} fmtPct={fmtPct} fmtNum={fmtNum} />
                   ))}
