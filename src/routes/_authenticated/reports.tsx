@@ -16,6 +16,8 @@ import { Download, Loader2, FileText, FileSpreadsheet, Eye, CheckCircle2, XCircl
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
 import { sortIndicators } from "@/lib/indicator-sort";
+import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
+
 import { decimalsFor } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from "recharts";
@@ -32,6 +34,11 @@ type Indicator = {
 };
 type Meas = { indicator_id: string; period_month: number | null; calculated_value: number | null; numerator: number | null; denominator: number | null };
 type Dept = { id: string; name_th: string };
+
+const LEVEL_DEPTH: Record<string, number> = {
+  object: 0, objective: 0, kpi: 1, qi: 2, subqi: 3, sub_qi: 3,
+};
+
 
 function ReportsPage() {
   const { hasAnyRole } = useAuth();
@@ -62,7 +69,7 @@ function MatrixSection() {
     queryFn: async () => {
       const [{ data: depts }, { data: inds }, { data: meas }] = await Promise.all([
         supabase.from("departments").select("id, name_th").order("name_th"),
-        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order").eq("is_active", true).eq("is_leaf", true).order("sort_order").order("code"),
+        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
       ]);
       return { depts: (depts ?? []) as Dept[], inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[] };
@@ -71,12 +78,27 @@ function MatrixSection() {
 
   const rows = useMemo(() => {
     if (!data) return [];
-    const inds = deptFilter === "all" ? data.inds : data.inds.filter((i) => i.department_id === deptFilter);
+    const ctx = makeCalcContext(data.inds as never, data.meas as never);
+
+    // dept filter: keep an indicator if itself or any descendant belongs to the dept
+    let inds = data.inds;
+    if (deptFilter !== "all") {
+      const byParent = new Map<string | null, Indicator[]>();
+      data.inds.forEach((i) => {
+        const arr = byParent.get(i.parent_id) ?? [];
+        arr.push(i); byParent.set(i.parent_id, arr);
+      });
+      const matches = (i: Indicator): boolean =>
+        i.department_id === deptFilter || (byParent.get(i.id) ?? []).some(matches);
+      inds = data.inds.filter(matches);
+    }
+
     return inds.map((ind) => {
-      const monthCells = FISCAL_MONTH_TO_CAL.map((cm) => {
-        const m = data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm);
+      const monthly = computeMonthly(ind as never, ctx);
+      const monthCells = FISCAL_MONTH_TO_CAL.map((cm, i) => {
+        const m = ind.is_leaf ? data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm) : undefined;
         return {
-          value: m?.calculated_value != null ? Number(m.calculated_value) : null,
+          value: monthly[i],
           numerator: m?.numerator != null ? Number(m.numerator) : null,
           denominator: m?.denominator != null ? Number(m.denominator) : null,
         };
@@ -90,9 +112,11 @@ function MatrixSection() {
     });
   }, [data, deptFilter]);
 
+
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   const fmtPct = (v: number) => v.toFixed(2) + "%";
+
   const fmtNum = (n: number) => n.toLocaleString("en-US");
 
   const exportCSV = () => {
@@ -148,12 +172,17 @@ function MatrixSection() {
             </TableHeader>
             <TableBody>
               {rows.length === 0 && <TableRow><TableCell colSpan={16} className="text-center py-10 text-muted-foreground">ไม่มีข้อมูล</TableCell></TableRow>}
-              {rows.map(({ ind, monthCells, avg, sumN, sumD, tone }) => (
-                <TableRow key={ind.id} className="align-top">
+              {rows.map(({ ind, monthCells, avg, sumN, sumD, tone }) => {
+                const depth = LEVEL_DEPTH[ind.level] ?? 3;
+                return (
+                <TableRow key={ind.id} className={cn("align-top", depth === 0 && "bg-primary/5", depth === 1 && "bg-muted/30")}>
                   <TableCell className="sticky left-0 bg-card z-10 border-r">
-                    <div className="text-sm font-medium leading-tight">{ind.name_th}</div>
-                    <div className="text-xs text-muted-foreground font-mono mt-0.5">{ind.code}</div>
+                    <div style={{ paddingLeft: depth * 14 }}>
+                      <div className={cn("text-sm leading-tight", depth <= 1 ? "font-bold" : "font-medium")}>{ind.name_th}</div>
+                      <div className="text-xs text-muted-foreground font-mono mt-0.5">{ind.code}</div>
+                    </div>
                   </TableCell>
+
                   {monthCells.map((c, i) => (
                     <MatrixCell key={i} value={c.value} numerator={c.numerator} denominator={c.denominator} ind={ind} fmtPct={fmtPct} fmtNum={fmtNum} />
                   ))}
@@ -163,7 +192,9 @@ function MatrixSection() {
                     {avg == null ? "—" : <Badge className={cn(statusBadgeClass(tone), "whitespace-nowrap")}>{statusLabel(tone)}</Badge>}
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
+
             </TableBody>
           </Table>
         </div>
@@ -172,7 +203,7 @@ function MatrixSection() {
   );
 }
 
-function MatrixCell({ value, numerator, denominator, ind, fmtPct, fmtNum, emphasize }: {
+function MatrixCell({ value, numerator, denominator, ind, fmtNum, emphasize }: {
   value: number | null; numerator: number | null; denominator: number | null;
   ind: Indicator; fmtPct: (v: number) => string; fmtNum: (n: number) => string; emphasize?: boolean;
 }) {
@@ -185,9 +216,10 @@ function MatrixCell({ value, numerator, denominator, ind, fmtPct, fmtNum, emphas
     : tone === "red" ? "bg-rose-50 text-rose-900" : "";
   return (
     <TableCell className={cn("text-center p-2 min-w-[88px]", toneCls, emphasize && "ring-1 ring-inset ring-border")}>
-      <div className={cn("font-bold tabular-nums", emphasize ? "text-base" : "text-sm")}>{fmtPct(value)}</div>
+      <div className={cn("font-bold tabular-nums", emphasize ? "text-base" : "text-sm")}>{value.toFixed(decimalsFor(ind.code))}%</div>
       {numerator != null && denominator != null && denominator > 0 && (
         <div className="text-[10px] opacity-70 tabular-nums mt-0.5">{fmtNum(numerator)} / {fmtNum(denominator)}</div>
+
       )}
     </TableCell>
   );
