@@ -234,8 +234,9 @@ function DashboardPage() {
     return {
       objectiveCards, kpiCards, nc,
       recorded, awaiting, pending, totalLeaf: leafIds.length,
-      chartData, activeMonths, curMonth,
+      chartData, activeMonths, curMonth, ctx, inds: data.inds,
     };
+
   }, [data, filterMode, filterValue, fiscalYear]);
 
   if (isLoading || !view || !data) {
