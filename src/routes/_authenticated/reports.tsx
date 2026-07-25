@@ -35,6 +35,11 @@ type Indicator = {
 type Meas = { indicator_id: string; period_month: number | null; calculated_value: number | null; numerator: number | null; denominator: number | null };
 type Dept = { id: string; name_th: string };
 
+const LEVEL_DEPTH: Record<string, number> = {
+  object: 0, objective: 0, kpi: 1, qi: 2, subqi: 3, sub_qi: 3,
+};
+
+
 function ReportsPage() {
   const { hasAnyRole } = useAuth();
   const canCompare = hasAnyRole(["admin", "manager", "auditor"]);
