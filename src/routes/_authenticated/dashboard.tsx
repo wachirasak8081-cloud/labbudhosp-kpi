@@ -44,6 +44,8 @@ function DashboardPage() {
   const [filterMode, setFilterMode] = useState<"all" | "quarter" | "month">("all");
   const [filterValue, setFilterValue] = useState<string>("all");
   const navigate = useNavigate();
+  const [detailKpi, setDetailKpi] = useState<Ind | null>(null);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", fiscalYear],
