@@ -203,7 +203,7 @@ function MatrixSection() {
   );
 }
 
-function MatrixCell({ value, numerator, denominator, ind, fmtPct, fmtNum, emphasize }: {
+function MatrixCell({ value, numerator, denominator, ind, fmtNum, emphasize }: {
   value: number | null; numerator: number | null; denominator: number | null;
   ind: Indicator; fmtPct: (v: number) => string; fmtNum: (n: number) => string; emphasize?: boolean;
 }) {
@@ -216,9 +216,10 @@ function MatrixCell({ value, numerator, denominator, ind, fmtPct, fmtNum, emphas
     : tone === "red" ? "bg-rose-50 text-rose-900" : "";
   return (
     <TableCell className={cn("text-center p-2 min-w-[88px]", toneCls, emphasize && "ring-1 ring-inset ring-border")}>
-      <div className={cn("font-bold tabular-nums", emphasize ? "text-base" : "text-sm")}>{fmtPct(value)}</div>
+      <div className={cn("font-bold tabular-nums", emphasize ? "text-base" : "text-sm")}>{value.toFixed(decimalsFor(ind.code))}%</div>
       {numerator != null && denominator != null && denominator > 0 && (
         <div className="text-[10px] opacity-70 tabular-nums mt-0.5">{fmtNum(numerator)} / {fmtNum(denominator)}</div>
+
       )}
     </TableCell>
   );
