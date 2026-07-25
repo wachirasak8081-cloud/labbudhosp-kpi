@@ -16,6 +16,8 @@ import { Download, Loader2, FileText, FileSpreadsheet, Eye, CheckCircle2, XCircl
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
 import { sortIndicators } from "@/lib/indicator-sort";
+import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
+
 import { decimalsFor } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from "recharts";
