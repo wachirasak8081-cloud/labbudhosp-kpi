@@ -339,8 +339,9 @@ function DashboardPage() {
             <KpiCard
               key={k.ind.id}
               data={k}
-              onDetail={() => navigate({ to: "/dashboard/indicator/$id", params: { id: k.ind.id } })}
+              onDetail={() => setDetailKpi(k.ind)}
             />
+
           ))}
         </div>
       </div>
