@@ -116,6 +116,7 @@ function MatrixSection() {
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   const fmtPct = (v: number) => v.toFixed(2) + "%";
+
   const fmtNum = (n: number) => n.toLocaleString("en-US");
 
   const exportCSV = () => {
