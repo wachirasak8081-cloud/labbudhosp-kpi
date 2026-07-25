@@ -186,7 +186,9 @@ function MatrixSection() {
                     {avg == null ? "—" : <Badge className={cn(statusBadgeClass(tone), "whitespace-nowrap")}>{statusLabel(tone)}</Badge>}
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
+
             </TableBody>
           </Table>
         </div>
