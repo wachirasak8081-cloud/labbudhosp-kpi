@@ -1,0 +1,1 @@
+UPDATE public.indicators SET is_leaf = true WHERE code = 'QI5.1';
