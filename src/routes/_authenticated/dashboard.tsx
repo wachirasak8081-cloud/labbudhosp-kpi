@@ -8,7 +8,9 @@ import { Loader2, TrendingUp, TrendingDown, Circle, AlertTriangle, CheckCircle2,
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { sortIndicators } from "@/lib/indicator-sort";
 import { decimalsFor, formatIndicatorValue } from "@/lib/indicator-format";
-import { toneFor } from "@/lib/indicator-status";
+import { toneFor, targetSymbol } from "@/lib/indicator-status";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { computeAtMonth, computeMonthly, makeCalcContext, type IndBasic, type MeasBasic } from "@/lib/indicator-calc";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +44,8 @@ function DashboardPage() {
   const [filterMode, setFilterMode] = useState<"all" | "quarter" | "month">("all");
   const [filterValue, setFilterValue] = useState<string>("all");
   const navigate = useNavigate();
+  const [detailKpi, setDetailKpi] = useState<Ind | null>(null);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", fiscalYear],
@@ -234,8 +238,9 @@ function DashboardPage() {
     return {
       objectiveCards, kpiCards, nc,
       recorded, awaiting, pending, totalLeaf: leafIds.length,
-      chartData, activeMonths, curMonth,
+      chartData, activeMonths, curMonth, ctx, inds: data.inds,
     };
+
   }, [data, filterMode, filterValue, fiscalYear]);
 
   if (isLoading || !view || !data) {
@@ -338,8 +343,9 @@ function DashboardPage() {
             <KpiCard
               key={k.ind.id}
               data={k}
-              onDetail={() => navigate({ to: "/dashboard/indicator/$id", params: { id: k.ind.id } })}
+              onDetail={() => setDetailKpi(k.ind)}
             />
+
           ))}
         </div>
       </div>
@@ -396,9 +402,114 @@ function DashboardPage() {
         <StatRow icon={<Clock className="w-4 h-4 text-[color:var(--warning)]" />} label="รออนุมัติ" value={view.awaiting} total={view.totalLeaf} color="amber" />
         <StatRow icon={<AlertTriangle className="w-4 h-4 text-[color:var(--destructive)]" />} label="ยังไม่บันทึก" value={view.pending} total={view.totalLeaf} color="red" />
       </div>
+
+      {detailKpi && (
+        <KpiDetailDialog
+          kpi={detailKpi}
+          inds={view.inds}
+          ctx={view.ctx}
+          activeMonths={view.activeMonths}
+          onClose={() => setDetailKpi(null)}
+          onOpenFull={(id) => { setDetailKpi(null); navigate({ to: "/dashboard/indicator/$id", params: { id } }); }}
+        />
+      )}
     </div>
   );
 }
+
+/* ---------------- KPI detail dialog (monthly matrix like /reports) ---------------- */
+function toneBg(t: ReturnType<typeof toneFor>): string {
+  return t === "green" ? "bg-emerald-50" : t === "yellow" ? "bg-amber-50" : t === "red" ? "bg-rose-50" : "";
+}
+
+function KpiDetailDialog({
+  kpi, inds, ctx, activeMonths, onClose, onOpenFull,
+}: {
+  kpi: Ind;
+  inds: Ind[];
+  ctx: ReturnType<typeof makeCalcContext>;
+  activeMonths: number[];
+  onClose: () => void;
+  onOpenFull: (id: string) => void;
+}) {
+  const rows = useMemo(() => {
+    const byParent = new Map<string | null, Ind[]>();
+    for (const i of inds) {
+      const arr = byParent.get(i.parent_id) ?? [];
+      arr.push(i);
+      byParent.set(i.parent_id, arr);
+    }
+    const out: { ind: Ind; depth: number }[] = [];
+    const walk = (parent: Ind, depth: number) => {
+      for (const c of sortIndicators(byParent.get(parent.id) ?? [])) {
+        out.push({ ind: c, depth });
+        walk(c, depth + 1);
+      }
+    };
+    out.push({ ind: kpi, depth: 0 });
+    walk(kpi, 1);
+    return out.map(({ ind, depth }) => {
+      const monthly = computeMonthly(ind, ctx);
+      const vals = monthly.filter((v, i) => v != null && activeMonths.includes(FISCAL_MONTH_TO_CAL[i])) as number[];
+      const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      return { ind, depth, monthly, avg };
+    });
+  }, [kpi, inds, ctx, activeMonths]);
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-[min(96vw,1100px)]">
+        <DialogHeader>
+          <DialogTitle className="text-base">
+            {kpi.code} — {kpi.name_th}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="text-xs text-muted-foreground -mt-1">
+          รายละเอียดรายเดือนและค่าเฉลี่ยของ QI / Sub-QI ที่เกี่ยวข้อง
+        </div>
+        <div className="overflow-auto max-h-[65vh] mt-2">
+          <table className="w-full text-[12px] border-collapse">
+            <thead className="sticky top-0 bg-card">
+              <tr>
+                <th className="border p-1.5 text-left min-w-[240px] font-semibold">ตัวชี้วัด</th>
+                <th className="border p-1.5 text-center font-semibold whitespace-nowrap">เป้า</th>
+                {THAI_MONTHS.map((m) => <th key={m} className="border p-1.5 text-center font-semibold">{m}</th>)}
+                <th className="border p-1.5 text-center font-semibold">เฉลี่ย</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ ind, depth, monthly, avg }) => {
+                const tone = toneFor(avg, ind.target_value, ind.target_condition, ind.is_inverted);
+                return (
+                  <tr key={ind.id} className={depth === 0 ? "font-bold bg-muted/40" : ""}>
+                    <td className="border p-1.5" style={{ paddingLeft: 6 + depth * 14 }}>
+                      <button type="button" className="text-left hover:underline" onClick={() => onOpenFull(ind.id)}>
+                        <span className="font-mono text-[10px] text-muted-foreground mr-1">{ind.code}</span>
+                        {ind.name_th}
+                      </button>
+                    </td>
+                    <td className="border p-1.5 text-center whitespace-nowrap">
+                      {ind.target_value != null ? `${targetSymbol(ind.target_condition)} ${ind.target_value.toFixed(decimalsFor(ind.code))}` : "—"}
+                    </td>
+                    {monthly.map((v, i) => (
+                      <td key={i} className={cn("border p-1.5 text-center tabular-nums", toneBg(toneFor(v, ind.target_value, ind.target_condition, ind.is_inverted)))}>
+                        {v == null ? "—" : v.toFixed(decimalsFor(ind.code))}
+                      </td>
+                    ))}
+                    <td className={cn("border p-1.5 text-center font-bold tabular-nums", toneBg(tone))}>
+                      {avg == null ? "—" : avg.toFixed(decimalsFor(ind.code))}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 /* ---------------- KPI Card ---------------- */
 function KpiCard({
