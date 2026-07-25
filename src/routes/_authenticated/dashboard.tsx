@@ -8,7 +8,9 @@ import { Loader2, TrendingUp, TrendingDown, Circle, AlertTriangle, CheckCircle2,
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { sortIndicators } from "@/lib/indicator-sort";
 import { decimalsFor, formatIndicatorValue } from "@/lib/indicator-format";
-import { toneFor } from "@/lib/indicator-status";
+import { toneFor, targetSymbol } from "@/lib/indicator-status";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { computeAtMonth, computeMonthly, makeCalcContext, type IndBasic, type MeasBasic } from "@/lib/indicator-calc";
 import { cn } from "@/lib/utils";
 
