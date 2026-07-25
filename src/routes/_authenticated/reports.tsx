@@ -62,7 +62,7 @@ function MatrixSection() {
     queryFn: async () => {
       const [{ data: depts }, { data: inds }, { data: meas }] = await Promise.all([
         supabase.from("departments").select("id, name_th").order("name_th"),
-        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order").eq("is_active", true).eq("is_leaf", true).order("sort_order").order("code"),
+        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
         supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
       ]);
       return { depts: (depts ?? []) as Dept[], inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[] };
@@ -71,12 +71,27 @@ function MatrixSection() {
 
   const rows = useMemo(() => {
     if (!data) return [];
-    const inds = deptFilter === "all" ? data.inds : data.inds.filter((i) => i.department_id === deptFilter);
+    const ctx = makeCalcContext(data.inds as never, data.meas as never);
+
+    // dept filter: keep an indicator if itself or any descendant belongs to the dept
+    let inds = data.inds;
+    if (deptFilter !== "all") {
+      const byParent = new Map<string | null, Indicator[]>();
+      data.inds.forEach((i) => {
+        const arr = byParent.get(i.parent_id) ?? [];
+        arr.push(i); byParent.set(i.parent_id, arr);
+      });
+      const matches = (i: Indicator): boolean =>
+        i.department_id === deptFilter || (byParent.get(i.id) ?? []).some(matches);
+      inds = data.inds.filter(matches);
+    }
+
     return inds.map((ind) => {
-      const monthCells = FISCAL_MONTH_TO_CAL.map((cm) => {
-        const m = data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm);
+      const monthly = computeMonthly(ind as never, ctx);
+      const monthCells = FISCAL_MONTH_TO_CAL.map((cm, i) => {
+        const m = ind.is_leaf ? data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm) : undefined;
         return {
-          value: m?.calculated_value != null ? Number(m.calculated_value) : null,
+          value: monthly[i],
           numerator: m?.numerator != null ? Number(m.numerator) : null,
           denominator: m?.denominator != null ? Number(m.denominator) : null,
         };
@@ -89,6 +104,7 @@ function MatrixSection() {
       return { ind, monthCells, avg, sumN, sumD, tone };
     });
   }, [data, deptFilter]);
+
 
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
