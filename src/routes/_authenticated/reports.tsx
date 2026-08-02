@@ -250,7 +250,7 @@ function AnnualReportSection() {
       const XLSX = await import("xlsx");
       const wb = XLSX.utils.book_new();
       // Sheet 1: Objectives summary
-      const objectives = data.inds.filter((i) => i.level === "objective");
+      const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
       const objRows: (string | number)[][] = [["วัตถุประสงค์", ...THAI_MONTHS, "เฉลี่ย", "เป้าหมาย", "สถานะ"]];
       objectives.forEach((o) => {
         const monthly = derivedMonthly(data.inds, data.meas, o);
@@ -382,7 +382,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
   const [generating, setGenerating] = useState(false);
   const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
 
-  const objectives = data.inds.filter((i) => i.level === "objective");
+  const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
   const kpis = data.inds.filter((i) => i.level === "kpi");
 
   const generatePDF = async () => {
@@ -471,6 +471,39 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
               </tbody>
             </table>
           </div>
+
+          {/* Per-objective chart pages */}
+          {objectives.map((o) => {
+            const monthly = derivedMonthly(data.inds, data.meas, o);
+            const chartData = THAI_MONTHS.map((m, i) => ({ month: m, value: monthly[i] }));
+            const avg = avgOf(monthly);
+            const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
+            const d = decimalsFor(o.code);
+            return (
+              <div key={o.id} data-page className="border rounded-lg p-6 bg-white">
+                <h3 className="text-base font-bold mb-1">{o.code} {o.name_th}</h3>
+                <p className="text-xs text-gray-600 mb-3">
+                  เป้าหมาย: {targetSymbol(o.target_condition)}{o.target_value ?? "—"}{o.unit ?? "%"} • เฉลี่ย: {avg == null ? "—" : avg.toFixed(d)}% • <span className={cn("font-semibold", tone === "green" ? "text-emerald-700" : tone === "yellow" ? "text-amber-700" : tone === "red" ? "text-rose-700" : "")}>{statusLabel(tone)}</span>
+                </p>
+                <table className="w-full text-xs border-collapse mb-4">
+                  <thead><tr className="bg-gray-100">{THAI_MONTHS.map((m) => <th key={m} className="border p-1">{m}</th>)}<th className="border p-1">เฉลี่ย</th></tr></thead>
+                  <tbody><tr>{monthly.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, o.target_value, o.target_condition, o.is_inverted)))}>{v == null ? "—" : v.toFixed(d)}</td>)}<td className={cn("border p-1 text-center font-bold", toneBg(tone))}>{avg == null ? "—" : avg.toFixed(d)}</td></tr></tbody>
+                </table>
+                <div style={{ width: "100%", height: 180 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} domain={["auto", "auto"]} tickFormatter={(v: number) => v.toFixed(d)} width={d > 2 ? 56 : 40} />
+                      <Tooltip formatter={(v: number | string) => (typeof v === "number" ? v.toFixed(d) : v)} />
+                      {o.target_value != null && <ReferenceLine y={o.target_value} stroke="#ef4444" strokeDasharray="3 3" label={{ value: "เป้า", fontSize: 10 }} />}
+                      <Line type="monotone" dataKey="value" stroke="#0f766e" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            );
+          })}
 
           {/* Pages 3+: per KPI */}
           {kpis.map((kpi) => {
