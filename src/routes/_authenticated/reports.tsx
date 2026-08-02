@@ -253,8 +253,7 @@ function AnnualReportSection() {
       const objectives = data.inds.filter((i) => i.level === "objective");
       const objRows: (string | number)[][] = [["วัตถุประสงค์", ...THAI_MONTHS, "เฉลี่ย", "เป้าหมาย", "สถานะ"]];
       objectives.forEach((o) => {
-        const leaves = childrenLeavesOf(data.inds, o.id);
-        const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+        const monthly = derivedMonthly(data.inds, data.meas, o);
         const avg = avgOf(monthly);
         const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
         const dO = decimalsFor(o.code);
@@ -354,6 +353,13 @@ function childrenLeavesOf(all: Indicator[], parentId: string): Indicator[] {
   walk(parentId);
   return out;
 }
+const ctxCache = new WeakMap<object, ReturnType<typeof makeCalcContext>>();
+/** Monthly derived values for any indicator (handles KPI4 = 100 - avg(QI4.1, QI4.2)). */
+function derivedMonthly(all: Indicator[], meas: Meas[], ind: Indicator): (number | null)[] {
+  let ctx = ctxCache.get(meas as unknown as object);
+  if (!ctx) { ctx = makeCalcContext(all as never, meas as never); ctxCache.set(meas as unknown as object, ctx); }
+  return computeMonthly(ind as never, ctx);
+}
 function avgLeaves(leaves: Indicator[], meas: Meas[], cm: number): number | null {
   const vals: number[] = [];
   leaves.forEach((l) => {
@@ -445,8 +451,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
               </thead>
               <tbody>
                 {objectives.map((o) => {
-                  const leaves = childrenLeavesOf(data.inds, o.id);
-                  const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+                  const monthly = derivedMonthly(data.inds, data.meas, o);
                   const avg = avgOf(monthly);
                   const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
                   return (
@@ -466,7 +471,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
           {/* Pages 3+: per KPI */}
           {kpis.map((kpi) => {
             const leaves = childrenLeavesOf(data.inds, kpi.id);
-            const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+            const monthly = derivedMonthly(data.inds, data.meas, kpi);
             const chartData = THAI_MONTHS.map((m, i) => ({ month: m, value: monthly[i], target: kpi.target_value ?? null }));
             const avg = avgOf(monthly);
             const tone = toneFor(avg, kpi.target_value, kpi.target_condition, kpi.is_inverted);
