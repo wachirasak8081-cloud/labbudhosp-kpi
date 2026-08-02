@@ -272,6 +272,18 @@ function AnnualReportSection() {
         const leaves = childrenLeavesOf(data.inds, kpi.id);
         const rows: (string | number)[][] = [["รหัส", "ตัวชี้วัด", ...THAI_MONTHS, "เฉลี่ย", "เป้าหมาย", "สถานะ"]];
         const allLeaves = leaves.length > 0 ? leaves : [kpi];
+        if (leaves.length > 0) {
+          const km = derivedMonthly(data.inds, data.meas, kpi);
+          const ka = avgOf(km);
+          const dK = decimalsFor(kpi.code);
+          rows.push([
+            kpi.code, kpi.name_th,
+            ...km.map((v) => v == null ? "" : Number(v.toFixed(dK))),
+            ka == null ? "" : Number(ka.toFixed(dK)),
+            kpi.target_value != null ? `${targetSymbol(kpi.target_condition)}${kpi.target_value}` : "",
+            statusLabel(toneFor(ka, kpi.target_value, kpi.target_condition, kpi.is_inverted)),
+          ]);
+        }
         allLeaves.forEach((ind) => {
           const monthly = FISCAL_MONTH_TO_CAL.map((cm) => {
             const m = data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm);
