@@ -250,7 +250,7 @@ function AnnualReportSection() {
       const XLSX = await import("xlsx");
       const wb = XLSX.utils.book_new();
       // Sheet 1: Objectives summary
-      const objectives = data.inds.filter((i) => i.level === "objective");
+      const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
       const objRows: (string | number)[][] = [["วัตถุประสงค์", ...THAI_MONTHS, "เฉลี่ย", "เป้าหมาย", "สถานะ"]];
       objectives.forEach((o) => {
         const monthly = derivedMonthly(data.inds, data.meas, o);
