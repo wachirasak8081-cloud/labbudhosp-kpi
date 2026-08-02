@@ -253,8 +253,7 @@ function AnnualReportSection() {
       const objectives = data.inds.filter((i) => i.level === "objective");
       const objRows: (string | number)[][] = [["วัตถุประสงค์", ...THAI_MONTHS, "เฉลี่ย", "เป้าหมาย", "สถานะ"]];
       objectives.forEach((o) => {
-        const leaves = childrenLeavesOf(data.inds, o.id);
-        const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+        const monthly = derivedMonthly(data.inds, data.meas, o);
         const avg = avgOf(monthly);
         const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
         const dO = decimalsFor(o.code);
@@ -354,13 +353,12 @@ function childrenLeavesOf(all: Indicator[], parentId: string): Indicator[] {
   walk(parentId);
   return out;
 }
-function avgLeaves(leaves: Indicator[], meas: Meas[], cm: number): number | null {
-  const vals: number[] = [];
-  leaves.forEach((l) => {
-    const m = meas.find((x) => x.indicator_id === l.id && x.period_month === cm);
-    if (m?.calculated_value != null) vals.push(Number(m.calculated_value));
-  });
-  return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+const ctxCache = new WeakMap<object, ReturnType<typeof makeCalcContext>>();
+/** Monthly derived values for any indicator (handles KPI4 = 100 - avg(QI4.1, QI4.2)). */
+function derivedMonthly(all: Indicator[], meas: Meas[], ind: Indicator): (number | null)[] {
+  let ctx = ctxCache.get(meas as unknown as object);
+  if (!ctx) { ctx = makeCalcContext(all as never, meas as never); ctxCache.set(meas as unknown as object, ctx); }
+  return computeMonthly(ind as never, ctx);
 }
 function avgOf(arr: (number | null)[]): number | null {
   const v = arr.filter((x): x is number => x != null);
@@ -445,8 +443,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
               </thead>
               <tbody>
                 {objectives.map((o) => {
-                  const leaves = childrenLeavesOf(data.inds, o.id);
-                  const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+                  const monthly = derivedMonthly(data.inds, data.meas, o);
                   const avg = avgOf(monthly);
                   const tone = toneFor(avg, o.target_value, o.target_condition, o.is_inverted);
                   return (
@@ -466,7 +463,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
           {/* Pages 3+: per KPI */}
           {kpis.map((kpi) => {
             const leaves = childrenLeavesOf(data.inds, kpi.id);
-            const monthly = FISCAL_MONTH_TO_CAL.map((cm) => avgLeaves(leaves, data.meas, cm));
+            const monthly = derivedMonthly(data.inds, data.meas, kpi);
             const chartData = THAI_MONTHS.map((m, i) => ({ month: m, value: monthly[i], target: kpi.target_value ?? null }));
             const avg = avgOf(monthly);
             const tone = toneFor(avg, kpi.target_value, kpi.target_condition, kpi.is_inverted);
@@ -483,8 +480,8 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip />
+                      <YAxis tick={{ fontSize: 10 }} domain={["auto", "auto"]} tickFormatter={(v: number) => v.toFixed(decimalsFor(kpi.code))} width={decimalsFor(kpi.code) > 2 ? 56 : 40} />
+                      <Tooltip formatter={(v: number | string) => (typeof v === "number" ? v.toFixed(decimalsFor(kpi.code)) : v)} />
                       {kpi.target_value != null && <ReferenceLine y={kpi.target_value} stroke="#ef4444" strokeDasharray="3 3" label={{ value: "เป้า", fontSize: 10 }} />}
                       <Line type="monotone" dataKey="value" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
