@@ -382,7 +382,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
   const [generating, setGenerating] = useState(false);
   const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
 
-  const objectives = data.inds.filter((i) => i.level === "objective");
+  const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
   const kpis = data.inds.filter((i) => i.level === "kpi");
 
   const generatePDF = async () => {
