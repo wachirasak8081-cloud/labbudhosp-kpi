@@ -365,6 +365,18 @@ function childrenLeavesOf(all: Indicator[], parentId: string): Indicator[] {
   walk(parentId);
   return out;
 }
+/** All descendants (QI + Sub-QI) in hierarchical order, with depth for indentation. */
+function descendantsOf(all: Indicator[], parentId: string): Array<{ ind: Indicator; depth: number }> {
+  const out: Array<{ ind: Indicator; depth: number }> = [];
+  const walk = (pid: string, depth: number) => {
+    all.filter((i) => i.parent_id === pid).forEach((c) => {
+      out.push({ ind: c, depth });
+      if (!c.is_leaf) walk(c.id, depth + 1);
+    });
+  };
+  walk(parentId, 0);
+  return out;
+}
 const ctxCache = new WeakMap<object, ReturnType<typeof makeCalcContext>>();
 /** Monthly derived values for any indicator (handles KPI4 = 100 - avg(QI4.1, QI4.2)). */
 function derivedMonthly(all: Indicator[], meas: Meas[], ind: Indicator): (number | null)[] {
