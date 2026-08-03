@@ -546,7 +546,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                 </div>
                 {leaves.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold mb-1">รายละเอียด Sub-QI:</p>
+                    <p className="text-xs font-semibold mb-1">รายละเอียด QI / Sub-QI:</p>
                     <table className="w-full text-[10px] border-collapse">
                       <thead><tr className="bg-gray-50"><th className="border p-1 text-left">ตัวชี้วัด</th>{THAI_MONTHS.map((m) => <th key={m} className="border p-1">{m}</th>)}<th className="border p-1">เฉลี่ย</th></tr></thead>
                       <tbody>
