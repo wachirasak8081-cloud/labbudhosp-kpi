@@ -365,6 +365,18 @@ function childrenLeavesOf(all: Indicator[], parentId: string): Indicator[] {
   walk(parentId);
   return out;
 }
+/** All descendants (QI + Sub-QI) in hierarchical order, with depth for indentation. */
+function descendantsOf(all: Indicator[], parentId: string): Array<{ ind: Indicator; depth: number }> {
+  const out: Array<{ ind: Indicator; depth: number }> = [];
+  const walk = (pid: string, depth: number) => {
+    all.filter((i) => i.parent_id === pid).forEach((c) => {
+      out.push({ ind: c, depth });
+      if (!c.is_leaf) walk(c.id, depth + 1);
+    });
+  };
+  walk(parentId, 0);
+  return out;
+}
 const ctxCache = new WeakMap<object, ReturnType<typeof makeCalcContext>>();
 /** Monthly derived values for any indicator (handles KPI4 = 100 - avg(QI4.1, QI4.2)). */
 function derivedMonthly(all: Indicator[], meas: Meas[], ind: Indicator): (number | null)[] {
@@ -507,7 +519,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
 
           {/* Pages 3+: per KPI */}
           {kpis.map((kpi) => {
-            const leaves = childrenLeavesOf(data.inds, kpi.id);
+            const leaves = descendantsOf(data.inds, kpi.id);
             const monthly = derivedMonthly(data.inds, data.meas, kpi);
             const chartData = THAI_MONTHS.map((m, i) => ({ month: m, value: monthly[i], target: kpi.target_value ?? null }));
             const avg = avgOf(monthly);
@@ -534,19 +546,21 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                 </div>
                 {leaves.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold mb-1">รายละเอียด Sub-QI:</p>
+                    <p className="text-xs font-semibold mb-1">รายละเอียด QI / Sub-QI:</p>
                     <table className="w-full text-[10px] border-collapse">
                       <thead><tr className="bg-gray-50"><th className="border p-1 text-left">ตัวชี้วัด</th>{THAI_MONTHS.map((m) => <th key={m} className="border p-1">{m}</th>)}<th className="border p-1">เฉลี่ย</th></tr></thead>
                       <tbody>
-                        {leaves.map((l) => {
-                          const lm = FISCAL_MONTH_TO_CAL.map((cm) => {
-                            const m = data.meas.find((x) => x.indicator_id === l.id && x.period_month === cm);
-                            return m?.calculated_value != null ? Number(m.calculated_value) : null;
-                          });
+                        {leaves.map(({ ind: l, depth }) => {
+                          const lm = l.is_leaf
+                            ? FISCAL_MONTH_TO_CAL.map((cm) => {
+                                const m = data.meas.find((x) => x.indicator_id === l.id && x.period_month === cm);
+                                return m?.calculated_value != null ? Number(m.calculated_value) : null;
+                              })
+                            : derivedMonthly(data.inds, data.meas, l);
                           const la = avgOf(lm);
                           return (
-                            <tr key={l.id}>
-                              <td className="border p-1">{l.code} {l.name_th}</td>
+                            <tr key={l.id} className={l.is_leaf ? "" : "bg-gray-50 font-semibold"}>
+                              <td className="border p-1" style={{ paddingLeft: 4 + depth * 12 }}>{l.code} {l.name_th}</td>
                               {lm.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, l.target_value, l.target_condition, l.is_inverted)))}>{v == null ? "—" : v.toFixed(decimalsFor(l.code))}</td>)}
                               <td className={cn("border p-1 text-center font-bold", toneBg(toneFor(la, l.target_value, l.target_condition, l.is_inverted)))}>{la == null ? "—" : la.toFixed(decimalsFor(l.code))}</td>
                             </tr>
