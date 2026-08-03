@@ -519,7 +519,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
 
           {/* Pages 3+: per KPI */}
           {kpis.map((kpi) => {
-            const leaves = childrenLeavesOf(data.inds, kpi.id);
+            const leaves = descendantsOf(data.inds, kpi.id);
             const monthly = derivedMonthly(data.inds, data.meas, kpi);
             const chartData = THAI_MONTHS.map((m, i) => ({ month: m, value: monthly[i], target: kpi.target_value ?? null }));
             const avg = avgOf(monthly);
