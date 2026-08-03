@@ -287,38 +287,51 @@ function DashboardPage() {
       </div>
 
       {/* Objective cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {view.objectiveCards.map(({ ind, display, prev, trend }) => {
-          const diff = display != null && prev != null ? display - prev : null;
-          return (
-            <div key={ind.id} className="bg-card border border-border rounded-2xl p-5">
-              <div className="text-[13px] font-semibold text-foreground truncate" title={ind.name_th}>{ind.name_th}</div>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-[26px] font-extrabold tabular-nums">
-                  {display != null ? formatIndicatorValue(ind.code, display) + "%" : "—%"}
-                </span>
-                {trend === "up" && <TrendingUp className="w-4 h-4 text-[color:var(--success)]" />}
-                {trend === "down" && <TrendingDown className="w-4 h-4 text-[color:var(--destructive)]" />}
-                {trend === "flat" && <Circle className="w-3 h-3 text-muted-foreground" />}
+      <div>
+        <h2 className="text-base font-bold mb-3">Objective : 1-4</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {view.objectiveCards.map(({ ind, display, prev, trend }) => {
+            const diff = display != null && prev != null ? display - prev : null;
+            return (
+              <div key={ind.id} className="bg-card border border-border rounded-2xl p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-[13px] font-semibold text-foreground truncate" title={ind.name_th}>{ind.name_th}</div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailKpi(ind)}
+                    className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[color:var(--accent-bg,oklch(0.96_0.02_250))] px-2.5 py-1 text-[11px] font-semibold text-primary hover:opacity-80"
+                  >
+                    รายละเอียด <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-[26px] font-extrabold tabular-nums">
+                    {display != null ? formatIndicatorValue(ind.code, display) + "%" : "—%"}
+                  </span>
+                  {trend === "up" && <TrendingUp className="w-4 h-4 text-[color:var(--success)]" />}
+                  {trend === "down" && <TrendingDown className="w-4 h-4 text-[color:var(--destructive)]" />}
+                  {trend === "flat" && <Circle className="w-3 h-3 text-muted-foreground" />}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  เป้าหมาย: {ind.target_value != null ? ind.target_value.toFixed(decimalsFor(ind.code)) : "—"}%
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-1">
+                  {prev != null
+                    ? <>เดือนก่อนหน้า: {formatIndicatorValue(ind.code, prev)}%
+                        {diff != null && (
+                          <span className={cn("ml-1 font-semibold", diff >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
+                            ({diff >= 0 ? "+" : ""}{diff.toFixed(decimalsFor(ind.code))})
+                          </span>
+                        )}
+                      </>
+                    : "เดือนก่อนหน้า: —"}
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                เป้าหมาย: {ind.target_value != null ? ind.target_value.toFixed(decimalsFor(ind.code)) : "—"}%
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-1">
-                {prev != null
-                  ? <>เดือนก่อนหน้า: {formatIndicatorValue(ind.code, prev)}%
-                      {diff != null && (
-                        <span className={cn("ml-1 font-semibold", diff >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--destructive)]")}>
-                          ({diff >= 0 ? "+" : ""}{diff.toFixed(decimalsFor(ind.code))})
-                        </span>
-                      )}
-                    </>
-                  : "เดือนก่อนหน้า: —"}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+
 
       {/* Yearly bar chart */}
       <div className="bg-card border border-border rounded-2xl p-6">
