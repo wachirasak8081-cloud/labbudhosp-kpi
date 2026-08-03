@@ -550,15 +550,17 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
                     <table className="w-full text-[10px] border-collapse">
                       <thead><tr className="bg-gray-50"><th className="border p-1 text-left">ตัวชี้วัด</th>{THAI_MONTHS.map((m) => <th key={m} className="border p-1">{m}</th>)}<th className="border p-1">เฉลี่ย</th></tr></thead>
                       <tbody>
-                        {leaves.map((l) => {
-                          const lm = FISCAL_MONTH_TO_CAL.map((cm) => {
-                            const m = data.meas.find((x) => x.indicator_id === l.id && x.period_month === cm);
-                            return m?.calculated_value != null ? Number(m.calculated_value) : null;
-                          });
+                        {leaves.map(({ ind: l, depth }) => {
+                          const lm = l.is_leaf
+                            ? FISCAL_MONTH_TO_CAL.map((cm) => {
+                                const m = data.meas.find((x) => x.indicator_id === l.id && x.period_month === cm);
+                                return m?.calculated_value != null ? Number(m.calculated_value) : null;
+                              })
+                            : derivedMonthly(data.inds, data.meas, l);
                           const la = avgOf(lm);
                           return (
-                            <tr key={l.id}>
-                              <td className="border p-1">{l.code} {l.name_th}</td>
+                            <tr key={l.id} className={l.is_leaf ? "" : "bg-gray-50 font-semibold"}>
+                              <td className="border p-1" style={{ paddingLeft: 4 + depth * 12 }}>{l.code} {l.name_th}</td>
                               {lm.map((v, i) => <td key={i} className={cn("border p-1 text-center", toneBg(toneFor(v, l.target_value, l.target_condition, l.is_inverted)))}>{v == null ? "—" : v.toFixed(decimalsFor(l.code))}</td>)}
                               <td className={cn("border p-1 text-center font-bold", toneBg(toneFor(la, l.target_value, l.target_condition, l.is_inverted)))}>{la == null ? "—" : la.toFixed(decimalsFor(l.code))}</td>
                             </tr>
