@@ -294,8 +294,7 @@ function DashboardPage() {
             const diff = display != null && prev != null ? display - prev : null;
             return (
               <div key={ind.id} className="bg-card border border-border rounded-2xl p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-[13px] font-semibold text-foreground truncate" title={ind.name_th}>{ind.name_th}</div>
+                <div className="flex items-start justify-end">
                   <button
                     type="button"
                     onClick={() => setDetailKpi(ind)}
@@ -304,6 +303,7 @@ function DashboardPage() {
                     รายละเอียด <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
+                <div className="text-[13px] font-semibold text-foreground leading-snug mt-1" title={ind.name_th}>{ind.name_th}</div>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-[26px] font-extrabold tabular-nums">
                     {display != null ? formatIndicatorValue(ind.code, display) + "%" : "—%"}
