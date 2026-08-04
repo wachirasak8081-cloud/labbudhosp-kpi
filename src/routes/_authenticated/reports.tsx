@@ -400,6 +400,10 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
   const generatePDF = async () => {
     if (!ref.current) return;
     setGenerating(true);
+    // Offscreen A4-width clone so output is identical on every screen size.
+    const holder = document.createElement("div");
+    holder.style.cssText =
+      "position:fixed;top:0;left:-10000px;width:794px;background:#ffffff;z-index:-1;";
     try {
       const [{ default: jsPDF }, html2canvasMod] = await Promise.all([
         import("jspdf"),
@@ -407,26 +411,51 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
       ]);
       const html2canvas = html2canvasMod.default;
 
+      const clone = ref.current.cloneNode(true) as HTMLElement;
+      clone.style.width = "794px";
+      holder.appendChild(clone);
+      document.body.appendChild(holder);
+
+      // Wait for Thai fonts + a paint frame before capturing.
+      if (document.fonts?.ready) await document.fonts.ready;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const pageWidth = 210, pageHeight = 297;
-      const pages = ref.current.querySelectorAll<HTMLElement>("[data-page]");
+      const pageWidth = 210, pageHeight = 297, margin = 10;
+      const imgW = pageWidth - margin * 2;
+      const maxH = pageHeight - margin * 2;
+      const pages = clone.querySelectorAll<HTMLElement>("[data-page]");
+      let first = true;
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-        const img = canvas.toDataURL("image/jpeg", 0.92);
-        const imgW = pageWidth - 20;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        if (i > 0) pdf.addPage();
-        const h = Math.min(imgH, pageHeight - 20);
-        pdf.addImage(img, "JPEG", 10, 10, imgW, h);
+        const pxPerMm = canvas.width / imgW;
+        const sliceHpx = Math.floor(maxH * pxPerMm);
+        let y = 0;
+        while (y < canvas.height) {
+          const h = Math.min(sliceHpx, canvas.height - y);
+          const slice = document.createElement("canvas");
+          slice.width = canvas.width;
+          slice.height = h;
+          const ctx = slice.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, slice.width, slice.height);
+          ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+          if (!first) pdf.addPage();
+          first = false;
+          pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, imgW, h / pxPerMm);
+          y += h;
+        }
       }
       pdf.save(`รายงานประจำปี-${fiscalYear}.pdf`);
       toast.success("ส่งออก PDF เรียบร้อย");
     } catch (e) {
       toast.error("ส่งออก PDF ไม่สำเร็จ: " + (e as Error).message);
     } finally {
+      holder.remove();
       setGenerating(false);
     }
   };
+
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
