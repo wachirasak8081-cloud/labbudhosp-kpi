@@ -403,9 +403,10 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
     try {
       const [{ default: jsPDF }, html2canvasMod] = await Promise.all([
         import("jspdf"),
-        import("html2canvas"),
+        import("html2canvas-pro"),
       ]);
       const html2canvas = html2canvasMod.default;
+
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const pageWidth = 210, pageHeight = 297;
       const pages = ref.current.querySelectorAll<HTMLElement>("[data-page]");
