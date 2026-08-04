@@ -392,18 +392,21 @@ function avgOf(arr: (number | null)[]): number | null {
 function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indicator[]; meas: Meas[]; capa: Array<Record<string, unknown>> }; fiscalYear: number; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState<string>("");
   const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
 
   const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
   const kpis = data.inds.filter((i) => i.level === "kpi");
 
   const generatePDF = async () => {
-    if (!ref.current) return;
+    if (!ref.current || generating) return;
     setGenerating(true);
+    setProgress("กำลังเตรียมข้อมูล...");
     // Offscreen A4-width clone so output is identical on every screen size.
     const holder = document.createElement("div");
     holder.style.cssText =
       "position:fixed;top:0;left:-10000px;width:794px;background:#ffffff;z-index:-1;";
+    const idle = () => new Promise((r) => setTimeout(r, 0));
     try {
       const [{ default: jsPDF }, html2canvasMod] = await Promise.all([
         import("jspdf"),
@@ -416,23 +419,36 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
       holder.appendChild(clone);
       document.body.appendChild(holder);
 
-      // Wait for Thai fonts + a paint frame before capturing.
-      if (document.fonts?.ready) await document.fonts.ready;
+      // Wait for Thai fonts (with a cap) + a paint frame before capturing.
+      if (document.fonts?.ready) {
+        await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 3000))]);
+      }
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
 
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const pageWidth = 210, pageHeight = 297, margin = 10;
       const imgW = pageWidth - margin * 2;
       const maxH = pageHeight - margin * 2;
-      const pages = clone.querySelectorAll<HTMLElement>("[data-page]");
+      const pages = Array.from(clone.querySelectorAll<HTMLElement>("[data-page]"));
+      if (pages.length === 0) throw new Error("ไม่พบเนื้อหาสำหรับสร้าง PDF");
       let first = true;
       for (let i = 0; i < pages.length; i++) {
-        const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        setProgress(`กำลังสร้างหน้า ${i + 1}/${pages.length}`);
+        await idle(); // let the UI repaint between heavy captures
+        const canvas = await html2canvas(pages[i], {
+          scale: 1.5,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          logging: false,
+        });
+        if (!canvas.width || !canvas.height) continue;
         const pxPerMm = canvas.width / imgW;
-        const sliceHpx = Math.floor(maxH * pxPerMm);
+        const sliceHpx = Math.max(1, Math.floor(maxH * pxPerMm));
         let y = 0;
-        while (y < canvas.height) {
+        let guard = 0;
+        while (y < canvas.height && guard++ < 200) {
           const h = Math.min(sliceHpx, canvas.height - y);
+          if (h <= 0) break;
           const slice = document.createElement("canvas");
           slice.width = canvas.width;
           slice.height = h;
@@ -442,19 +458,24 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
           ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
           if (!first) pdf.addPage();
           first = false;
-          pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, imgW, h / pxPerMm);
+          pdf.addImage(slice.toDataURL("image/jpeg", 0.9), "JPEG", margin, margin, imgW, h / pxPerMm);
           y += h;
+          await idle();
         }
       }
+      setProgress("กำลังบันทึกไฟล์...");
       pdf.save(`รายงานประจำปี-${fiscalYear}.pdf`);
       toast.success("ส่งออก PDF เรียบร้อย");
     } catch (e) {
+      console.error("Export PDF failed", e);
       toast.error("ส่งออก PDF ไม่สำเร็จ: " + (e as Error).message);
     } finally {
       holder.remove();
+      setProgress("");
       setGenerating(false);
     }
   };
+
 
 
   return (
@@ -465,7 +486,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
             <span>Preview รายงานประจำปี {fiscalYear}</span>
             <Button onClick={generatePDF} disabled={generating} size="sm">
               {generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-              Export PDF
+              {generating ? (progress || "กำลังสร้าง PDF...") : "Export PDF"}
             </Button>
           </DialogTitle>
         </DialogHeader>
