@@ -486,7 +486,7 @@ function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indi
             <span>Preview รายงานประจำปี {fiscalYear}</span>
             <Button onClick={generatePDF} disabled={generating} size="sm">
               {generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-              Export PDF
+              {generating ? (progress || "กำลังสร้าง PDF...") : "Export PDF"}
             </Button>
           </DialogTitle>
         </DialogHeader>
