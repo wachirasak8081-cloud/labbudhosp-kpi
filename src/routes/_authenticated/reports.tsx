@@ -392,6 +392,7 @@ function avgOf(arr: (number | null)[]): number | null {
 function AnnualReportPreview({ data, fiscalYear, onClose }: { data: { inds: Indicator[]; meas: Meas[]; capa: Array<Record<string, unknown>> }; fiscalYear: number; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState<string>("");
   const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
 
   const objectives = data.inds.filter((i) => i.level === "objective" || i.level === "object");
