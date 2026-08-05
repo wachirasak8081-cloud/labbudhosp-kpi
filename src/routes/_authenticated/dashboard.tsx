@@ -213,14 +213,10 @@ function DashboardPage() {
     }
 
     // Bar chart data — group per objective, bars per year.
-    // Current-year value = average of KPI averages under this objective
-    // (KPI4 keeps its 100 - avg rule).
-    const chartData = objectiveCards.map(({ ind }) => {
+    // Current-year value must match the value shown on the Objective card.
+    const chartData = objectiveCards.map(({ ind, display }) => {
       const hist = annualByObj.get(ind.id) ?? new Map();
-      const kAvgs = kpiAvgByObj.get(ind.id) ?? [];
-      const kMean = kAvgs.length ? kAvgs.reduce((a, b) => a + b, 0) / kAvgs.length : null;
-      const curFromKpis = kMean == null ? null : (ind.code === "KPI4" ? 100 - kMean : kMean);
-      const cur = curFromKpis ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
+      const cur = display ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
       // monthly breakdown of current year for tooltip
       const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
       return {
@@ -234,6 +230,7 @@ function DashboardPage() {
         monthly,
       };
     });
+
 
     return {
       objectiveCards, kpiCards, nc,
