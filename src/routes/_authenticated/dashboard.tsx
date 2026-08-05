@@ -203,14 +203,8 @@ function DashboardPage() {
       annualByObj.get(a.objective_id)!.set(a.fiscal_year, Number(a.value));
     }
 
-    // KPI averages grouped by parent objective — used for current-year bar value
-    const kpiAvgByObj = new Map<string, number[]>();
-    for (const k of kpiCards) {
-      if (k.avg == null || !k.ind.parent_id) continue;
-      const arr = kpiAvgByObj.get(k.ind.parent_id) ?? [];
-      arr.push(k.avg);
-      kpiAvgByObj.set(k.ind.parent_id, arr);
-    }
+
+
 
     // Bar chart data — group per objective, bars per year.
     // Current-year value must match the value shown on the Objective card.
