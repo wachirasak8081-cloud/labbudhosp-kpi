@@ -203,24 +203,14 @@ function DashboardPage() {
       annualByObj.get(a.objective_id)!.set(a.fiscal_year, Number(a.value));
     }
 
-    // KPI averages grouped by parent objective — used for current-year bar value
-    const kpiAvgByObj = new Map<string, number[]>();
-    for (const k of kpiCards) {
-      if (k.avg == null || !k.ind.parent_id) continue;
-      const arr = kpiAvgByObj.get(k.ind.parent_id) ?? [];
-      arr.push(k.avg);
-      kpiAvgByObj.set(k.ind.parent_id, arr);
-    }
+
+
 
     // Bar chart data — group per objective, bars per year.
-    // Current-year value = average of KPI averages under this objective
-    // (KPI4 keeps its 100 - avg rule).
-    const chartData = objectiveCards.map(({ ind }) => {
+    // Current-year value must match the value shown on the Objective card.
+    const chartData = objectiveCards.map(({ ind, display }) => {
       const hist = annualByObj.get(ind.id) ?? new Map();
-      const kAvgs = kpiAvgByObj.get(ind.id) ?? [];
-      const kMean = kAvgs.length ? kAvgs.reduce((a, b) => a + b, 0) / kAvgs.length : null;
-      const curFromKpis = kMean == null ? null : (ind.code === "KPI4" ? 100 - kMean : kMean);
-      const cur = curFromKpis ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
+      const cur = display ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
       // monthly breakdown of current year for tooltip
       const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
       return {
@@ -234,6 +224,7 @@ function DashboardPage() {
         monthly,
       };
     });
+
 
     return {
       objectiveCards, kpiCards, nc,
