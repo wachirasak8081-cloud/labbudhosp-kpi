@@ -66,8 +66,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="w-10 h-10 rounded-lg bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center shrink-0">
-            <FlaskConical className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shrink-0 overflow-hidden">
+            <img src={logoAsset.url} alt="โลโก้ LabBudhosp-KPI" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="font-semibold text-[11px] leading-tight whitespace-pre-line">
