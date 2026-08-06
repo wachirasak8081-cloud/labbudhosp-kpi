@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, ListTree, ClipboardEdit, AlertTriangle, FileBarChart2,
-  Settings, FlaskConical, Target,
+  Settings, Target,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { supabase } from "@/integrations/supabase/client";
+import logoAsset from "@/assets/labbudhosp-kpi-logo.png.asset.json";
 
 type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[]; key?: string };
 
