@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, ListTree, ClipboardEdit, AlertTriangle, FileBarChart2,
-  Settings, FlaskConical, Target,
+  Settings, Target,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { supabase } from "@/integrations/supabase/client";
+import logoAsset from "@/assets/labbudhosp-kpi-logo.png.asset.json";
 
 type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[]; key?: string };
 
@@ -66,8 +67,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="w-10 h-10 rounded-lg bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center shrink-0">
-            <FlaskConical className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shrink-0 overflow-hidden">
+            <img src={logoAsset.url} alt="โลโก้ LabBudhosp-KPI" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="font-semibold text-[11px] leading-tight whitespace-pre-line">
