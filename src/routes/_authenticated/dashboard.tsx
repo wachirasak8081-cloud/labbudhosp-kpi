@@ -15,6 +15,18 @@ import { computeAtMonth, computeMonthly, makeCalcContext, type IndBasic, type Me
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "แดชบอร์ดภาพรวม — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "ภาพรวมผลการดำเนินงานตัวชี้วัด KPI/QI รายเดือนและรายปี พร้อมกราฟเปรียบเทียบตามวัตถุประสงค์ทั้ง 4 ด้าน" },
+      { property: "og:title", content: "แดชบอร์ดภาพรวม — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "ภาพรวมผลการดำเนินงานตัวชี้วัด KPI/QI รายเดือนและรายปี พร้อมกราฟเปรียบเทียบตามวัตถุประสงค์ทั้ง 4 ด้าน" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/dashboard" },
+      { name: "twitter:title", content: "แดชบอร์ดภาพรวม — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "ภาพรวมผลการดำเนินงานตัวชี้วัด KPI/QI รายเดือนและรายปี พร้อมกราฟเปรียบเทียบตามวัตถุประสงค์ทั้ง 4 ด้าน" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/dashboard" }],
+  }),
   component: DashboardPage,
 });
 

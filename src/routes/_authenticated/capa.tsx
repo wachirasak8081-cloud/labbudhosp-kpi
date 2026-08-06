@@ -25,7 +25,21 @@ import {
 import { RcaDialog } from "@/components/capa/rca-dialog";
 import { KanbanTab } from "@/components/capa/kanban-tab";
 
-export const Route = createFileRoute("/_authenticated/capa")({ component: CapaPage });
+export const Route = createFileRoute("/_authenticated/capa")({
+  head: () => ({
+    meta: [
+      { title: "แผนแก้ไข CAPA / CQI — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "บันทึกการวิเคราะห์สาเหตุและติดตามการแก้ไขปรับปรุงตามวงจร PDCA ตามข้อกำหนด ISO 15189 ข้อ 8.7 และ 8.8" },
+      { property: "og:title", content: "แผนแก้ไข CAPA / CQI — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "บันทึกการวิเคราะห์สาเหตุและติดตามการแก้ไขปรับปรุงตามวงจร PDCA ตามข้อกำหนด ISO 15189 ข้อ 8.7 และ 8.8" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/capa" },
+      { name: "twitter:title", content: "แผนแก้ไข CAPA / CQI — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "บันทึกการวิเคราะห์สาเหตุและติดตามการแก้ไขปรับปรุงตามวงจร PDCA ตามข้อกำหนด ISO 15189 ข้อ 8.7 และ 8.8" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/capa" }],
+  }),
+component: CapaPage,
+});
 
 type CAPA = {
   id: string; indicator_id: string; fiscal_year: number; period_month: number | null;

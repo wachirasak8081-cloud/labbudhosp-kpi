@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://labbudhosp-kpi.lovable.app/sitemap.xml

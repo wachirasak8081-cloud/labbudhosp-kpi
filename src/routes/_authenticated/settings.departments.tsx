@@ -14,6 +14,18 @@ import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings/departments")({
+  head: () => ({
+    meta: [
+      { title: "จัดการสาขางาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "จัดการข้อมูลสาขางานและแผนกภายในกลุ่มงานเทคนิคการแพทย์ โรงพยาบาลพุทธชินราช พิษณุโลก" },
+      { property: "og:title", content: "จัดการสาขางาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "จัดการข้อมูลสาขางานและแผนกภายในกลุ่มงานเทคนิคการแพทย์ โรงพยาบาลพุทธชินราช พิษณุโลก" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/settings/departments" },
+      { name: "twitter:title", content: "จัดการสาขางาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "จัดการข้อมูลสาขางานและแผนกภายในกลุ่มงานเทคนิคการแพทย์ โรงพยาบาลพุทธชินราช พิษณุโลก" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/settings/departments" }],
+  }),
   component: DepartmentsPage,
 });
 

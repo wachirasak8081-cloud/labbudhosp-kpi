@@ -19,6 +19,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/indicator/$id")({
+  head: () => ({
+    meta: [
+      { title: "รายละเอียดตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "เจาะลึกผลการดำเนินงานรายตัวชี้วัด แนวโน้มรายเดือน เป้าหมาย และข้อมูลย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:title", content: "รายละเอียดตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "เจาะลึกผลการดำเนินงานรายตัวชี้วัด แนวโน้มรายเดือน เป้าหมาย และข้อมูลย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/dashboard/indicator" },
+      { name: "twitter:title", content: "รายละเอียดตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "เจาะลึกผลการดำเนินงานรายตัวชี้วัด แนวโน้มรายเดือน เป้าหมาย และข้อมูลย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/dashboard/indicator" }],
+  }),
   component: IndicatorDetailPage,
 });
 

@@ -15,6 +15,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/data-entry/history")({
+  head: () => ({
+    meta: [
+      { title: "ประวัติการบันทึกข้อมูล — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "ตรวจสอบประวัติการบันทึกและแก้ไขข้อมูลผลการดำเนินงานตัวชี้วัดย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:title", content: "ประวัติการบันทึกข้อมูล — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "ตรวจสอบประวัติการบันทึกและแก้ไขข้อมูลผลการดำเนินงานตัวชี้วัดย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/data-entry/history" },
+      { name: "twitter:title", content: "ประวัติการบันทึกข้อมูล — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "ตรวจสอบประวัติการบันทึกและแก้ไขข้อมูลผลการดำเนินงานตัวชี้วัดย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/data-entry/history" }],
+  }),
   component: HistoryPage,
 });
 

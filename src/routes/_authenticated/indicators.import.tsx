@@ -15,6 +15,18 @@ import {
 } from "@/lib/indicators-xlsx";
 
 export const Route = createFileRoute("/_authenticated/indicators/import")({
+  head: () => ({
+    meta: [
+      { title: "นำเข้าตัวชี้วัดจาก Excel — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "นำเข้าโครงสร้างและสูตรคำนวณตัวชี้วัด KPI/QI จากไฟล์ Excel เข้าสู่ระบบติดตามของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:title", content: "นำเข้าตัวชี้วัดจาก Excel — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "นำเข้าโครงสร้างและสูตรคำนวณตัวชี้วัด KPI/QI จากไฟล์ Excel เข้าสู่ระบบติดตามของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/indicators/import" },
+      { name: "twitter:title", content: "นำเข้าตัวชี้วัดจาก Excel — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "นำเข้าโครงสร้างและสูตรคำนวณตัวชี้วัด KPI/QI จากไฟล์ Excel เข้าสู่ระบบติดตามของกลุ่มงานเทคนิคการแพทย์" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/indicators/import" }],
+  }),
   component: ImportPage,
 });
 

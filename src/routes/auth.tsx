@@ -11,7 +11,18 @@ import { toast } from "sonner";
 import { FlaskConical, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "เข้าสู่ระบบ — KPI/QI กลุ่มงานเทคนิคการแพทย์" }] }),
+  head: () => ({
+    meta: [
+      { title: "เข้าสู่ระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "เข้าสู่ระบบสำหรับเจ้าหน้าที่กลุ่มงานเทคนิคการแพทย์ เพื่อบันทึกข้อมูลและติดตามตัวชี้วัด KPI/QI ของโรงพยาบาลพุทธชินราช" },
+      { property: "og:title", content: "เข้าสู่ระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "เข้าสู่ระบบสำหรับเจ้าหน้าที่กลุ่มงานเทคนิคการแพทย์ เพื่อบันทึกข้อมูลและติดตามตัวชี้วัด KPI/QI ของโรงพยาบาลพุทธชินราช" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/auth" },
+      { name: "twitter:title", content: "เข้าสู่ระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "เข้าสู่ระบบสำหรับเจ้าหน้าที่กลุ่มงานเทคนิคการแพทย์ เพื่อบันทึกข้อมูลและติดตามตัวชี้วัด KPI/QI ของโรงพยาบาลพุทธชินราช" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/auth" }],
+  }),
   component: AuthPage,
 });
 

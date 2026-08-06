@@ -17,6 +17,18 @@ import { Loader2, Save, Send, CheckCircle2, History, RefreshCw } from "lucide-re
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
+  head: () => ({
+    meta: [
+      { title: "บันทึกข้อมูลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "บันทึกผลการดำเนินงานรายเดือนของตัวชี้วัด พร้อมคำนวณค่าร้อยละและส่งค่าขึ้นสู่ตัวชี้วัดระดับบนอัตโนมัติ" },
+      { property: "og:title", content: "บันทึกข้อมูลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "บันทึกผลการดำเนินงานรายเดือนของตัวชี้วัด พร้อมคำนวณค่าร้อยละและส่งค่าขึ้นสู่ตัวชี้วัดระดับบนอัตโนมัติ" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/data-entry" },
+      { name: "twitter:title", content: "บันทึกข้อมูลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "บันทึกผลการดำเนินงานรายเดือนของตัวชี้วัด พร้อมคำนวณค่าร้อยละและส่งค่าขึ้นสู่ตัวชี้วัดระดับบนอัตโนมัติ" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/data-entry" }],
+  }),
   component: DataEntryPage,
 });
 
