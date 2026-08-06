@@ -17,6 +17,18 @@ import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings/users")({
+  head: () => ({
+    meta: [
+      { title: "จัดการผู้ใช้งาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "เพิ่ม แก้ไข และกำหนดบทบาทผู้ใช้งานระบบติดตามตัวชี้วัด KPI/QI ของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:title", content: "จัดการผู้ใช้งาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "เพิ่ม แก้ไข และกำหนดบทบาทผู้ใช้งานระบบติดตามตัวชี้วัด KPI/QI ของกลุ่มงานเทคนิคการแพทย์" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/settings/users" },
+      { name: "twitter:title", content: "จัดการผู้ใช้งาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "เพิ่ม แก้ไข และกำหนดบทบาทผู้ใช้งานระบบติดตามตัวชี้วัด KPI/QI ของกลุ่มงานเทคนิคการแพทย์" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/settings/users" }],
+  }),
   component: AdminUsersPage,
 });
 

@@ -14,6 +14,18 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/audit-logs")({
+  head: () => ({
+    meta: [
+      { title: "ประวัติการเปลี่ยนแปลง — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "บันทึกการเข้าใช้งานและการแก้ไขข้อมูลทั้งระบบ เพื่อการตรวจสอบย้อนกลับตามมาตรฐานคุณภาพห้องปฏิบัติการ" },
+      { property: "og:title", content: "ประวัติการเปลี่ยนแปลง — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "บันทึกการเข้าใช้งานและการแก้ไขข้อมูลทั้งระบบ เพื่อการตรวจสอบย้อนกลับตามมาตรฐานคุณภาพห้องปฏิบัติการ" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/settings/audit-logs" },
+      { name: "twitter:title", content: "ประวัติการเปลี่ยนแปลง — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "บันทึกการเข้าใช้งานและการแก้ไขข้อมูลทั้งระบบ เพื่อการตรวจสอบย้อนกลับตามมาตรฐานคุณภาพห้องปฏิบัติการ" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/settings/audit-logs" }],
+  }),
   component: AuditPage,
 });
 

@@ -16,6 +16,18 @@ import { Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/targets")({
+  head: () => ({
+    meta: [
+      { title: "ทบทวนเป้าหมายประจำปี — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "ทบทวนและปรับปรุงค่าเป้าหมายของตัวชี้วัดแต่ละรายการในแต่ละปีงบประมาณ พร้อมประวัติการเปลี่ยนแปลงเป้าหมาย" },
+      { property: "og:title", content: "ทบทวนเป้าหมายประจำปี — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "ทบทวนและปรับปรุงค่าเป้าหมายของตัวชี้วัดแต่ละรายการในแต่ละปีงบประมาณ พร้อมประวัติการเปลี่ยนแปลงเป้าหมาย" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/targets" },
+      { name: "twitter:title", content: "ทบทวนเป้าหมายประจำปี — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "ทบทวนและปรับปรุงค่าเป้าหมายของตัวชี้วัดแต่ละรายการในแต่ละปีงบประมาณ พร้อมประวัติการเปลี่ยนแปลงเป้าหมาย" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/targets" }],
+  }),
   component: TargetsPage,
 });
 

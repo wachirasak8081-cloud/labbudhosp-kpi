@@ -24,6 +24,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports")({
+  head: () => ({
+    meta: [
+      { title: "รายงานสรุปผลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "รายงานผลการดำเนินงานตัวชี้วัดรายเดือนและรายงานประจำปี พร้อมกราฟและการส่งออกไฟล์ Excel และ PDF" },
+      { property: "og:title", content: "รายงานสรุปผลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "รายงานผลการดำเนินงานตัวชี้วัดรายเดือนและรายงานประจำปี พร้อมกราฟและการส่งออกไฟล์ Excel และ PDF" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/reports" },
+      { name: "twitter:title", content: "รายงานสรุปผลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "รายงานผลการดำเนินงานตัวชี้วัดรายเดือนและรายงานประจำปี พร้อมกราฟและการส่งออกไฟล์ Excel และ PDF" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/reports" }],
+  }),
   component: ReportsPage,
 });
 

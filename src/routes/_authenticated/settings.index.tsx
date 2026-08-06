@@ -4,6 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
+  head: () => ({
+    meta: [
+      { title: "ตั้งค่าระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "ตั้งค่าระบบติดตามตัวชี้วัด จัดการผู้ใช้งาน สาขางาน และตรวจสอบประวัติการเปลี่ยนแปลงข้อมูลทั้งระบบ" },
+      { property: "og:title", content: "ตั้งค่าระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "ตั้งค่าระบบติดตามตัวชี้วัด จัดการผู้ใช้งาน สาขางาน และตรวจสอบประวัติการเปลี่ยนแปลงข้อมูลทั้งระบบ" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/settings" },
+      { name: "twitter:title", content: "ตั้งค่าระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "ตั้งค่าระบบติดตามตัวชี้วัด จัดการผู้ใช้งาน สาขางาน และตรวจสอบประวัติการเปลี่ยนแปลงข้อมูลทั้งระบบ" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/settings" }],
+  }),
   component: SettingsIndex,
 });
 

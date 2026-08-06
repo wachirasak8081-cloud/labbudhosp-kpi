@@ -16,6 +16,18 @@ import { toast } from "sonner";
 import { exportIndicators } from "@/lib/indicators-xlsx";
 
 export const Route = createFileRoute("/_authenticated/indicators/")({
+  head: () => ({
+    meta: [
+      { title: "จัดการตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "description", content: "จัดการโครงสร้างตัวชี้วัดแบบลำดับชั้น Objective, KPI, QI และ Sub-QI พร้อมสูตรคำนวณและเป้าหมายประจำปี" },
+      { property: "og:title", content: "จัดการตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { property: "og:description", content: "จัดการโครงสร้างตัวชี้วัดแบบลำดับชั้น Objective, KPI, QI และ Sub-QI พร้อมสูตรคำนวณและเป้าหมายประจำปี" },
+      { property: "og:url", content: "https://labbudhosp-kpi.lovable.app/indicators" },
+      { name: "twitter:title", content: "จัดการตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
+      { name: "twitter:description", content: "จัดการโครงสร้างตัวชี้วัดแบบลำดับชั้น Objective, KPI, QI และ Sub-QI พร้อมสูตรคำนวณและเป้าหมายประจำปี" },
+    ],
+    links: [{ rel: "canonical", href: "https://labbudhosp-kpi.lovable.app/indicators" }],
+  }),
   component: IndicatorsPage,
 });
 
