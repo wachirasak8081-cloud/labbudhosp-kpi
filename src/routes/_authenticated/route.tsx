@@ -46,7 +46,7 @@ function AuthLayout() {
           <SidebarInset>
             <header className="h-14 sticky top-0 z-30 flex items-center gap-3 border-b bg-card/95 backdrop-blur px-4 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
               <SidebarTrigger />
-              <h1 className="text-base font-semibold truncate">{title}</h1>
+              <div className="text-base font-semibold truncate">{title}</div>
               <div className="ml-auto flex items-center gap-2">
                 <FiscalYearSelector />
                 <UserMenu />

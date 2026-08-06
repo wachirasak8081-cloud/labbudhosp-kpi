@@ -40,7 +40,7 @@ export function FiscalYearSelector() {
       {canAdd && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="icon" title="เพิ่มปีงบประมาณ"><Plus className="w-4 h-4" /></Button>
+            <Button variant="outline" size="icon" title="เพิ่มปีงบประมาณ" aria-label="เพิ่มปีงบประมาณ"><Plus className="w-4 h-4" /><span className="sr-only">เพิ่มปีงบประมาณ</span></Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader><DialogTitle>เพิ่มปีงบประมาณ</DialogTitle></DialogHeader>
