@@ -72,7 +72,7 @@ export function AppSidebar() {
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="font-semibold text-[11px] leading-tight whitespace-pre-line">
-              ระบบติดตามตัวชี้วัด KPI/QI{"\n"}กลุ่มงานเทคนิคการแพทย์และพยาธิวิทยาคลินิก
+              ระบบติดตามตัวชี้วัด KPI/QI{"\n"}กลุ่มงานเทคนิคการแพทย์{"\n"}และพยาธิวิทยาคลินิก
             </div>
             <div className="text-[10px] text-sidebar-foreground/70 leading-tight whitespace-pre-line">
               โรงพยาบาลพุทธชินราช พิษณุโลก{"\n\n\n"}จัดทำโดย ทนพ.วชิรศักดิ์ ภูริสวัสดิ์
