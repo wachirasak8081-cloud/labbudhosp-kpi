@@ -225,7 +225,7 @@ function DashboardPage() {
       const hist = annualByObj.get(ind.id) ?? new Map();
       const cur = display ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
       // monthly breakdown of current year for tooltip
-      const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
+      const monthly = FISCAL_MONTH_TO_CAL.map((cm) => (activeMonths.includes(cm) ? computeAtMonth(ind, cm, ctx) : null));
       return {
         objective: ind,
         yearValues: [
