@@ -130,7 +130,8 @@ function DashboardPage() {
       const cur = curCal != null ? computeAtMonth(o, curCal, ctx) : null;
       const prev = prevCal != null ? computeAtMonth(o, prevCal, ctx) : null;
       const avg = aggregate(o);
-      const display = filterMode === "all" ? avg : cur;
+      // Always show the average over the selected period (all year / quarter / month)
+      const display = avg;
       const tone = toneFor(display, o.target_value, o.target_condition, o.is_inverted);
       const trend = cur != null && prev != null
         ? (cur > prev + 0.01 ? "up" : cur < prev - 0.01 ? "down" : "flat")
