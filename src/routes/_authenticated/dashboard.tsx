@@ -130,7 +130,8 @@ function DashboardPage() {
       const cur = curCal != null ? computeAtMonth(o, curCal, ctx) : null;
       const prev = prevCal != null ? computeAtMonth(o, prevCal, ctx) : null;
       const avg = aggregate(o);
-      const display = filterMode === "all" ? avg : cur;
+      // Always show the average over the selected period (all year / quarter / month)
+      const display = avg;
       const tone = toneFor(display, o.target_value, o.target_condition, o.is_inverted);
       const trend = cur != null && prev != null
         ? (cur > prev + 0.01 ? "up" : cur < prev - 0.01 ? "down" : "flat")
@@ -156,7 +157,7 @@ function DashboardPage() {
       // last filled month for slider handle label
       const lastFilled = [...inFilter].reverse().find((x) => x.v != null);
       const lastFilledLabel = lastFilled ? THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(lastFilled.cal)] : "-";
-      return { ind: k, monthly, avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel };
+      return { ind: k, monthly: inFilter.map((x) => x.v), avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel };
     });
 
     // Non-conforming table — leaf indicators failing target
@@ -224,7 +225,7 @@ function DashboardPage() {
       const hist = annualByObj.get(ind.id) ?? new Map();
       const cur = display ?? annualByObj.get(ind.id)?.get(fiscalYear) ?? null;
       // monthly breakdown of current year for tooltip
-      const monthly = FISCAL_MONTH_TO_CAL.map((cm) => computeAtMonth(ind, cm, ctx));
+      const monthly = FISCAL_MONTH_TO_CAL.map((cm) => (activeMonths.includes(cm) ? computeAtMonth(ind, cm, ctx) : null));
       return {
         objective: ind,
         yearValues: [
