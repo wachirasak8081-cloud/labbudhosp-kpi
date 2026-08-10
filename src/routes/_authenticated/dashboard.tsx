@@ -157,7 +157,7 @@ function DashboardPage() {
       // last filled month for slider handle label
       const lastFilled = [...inFilter].reverse().find((x) => x.v != null);
       const lastFilledLabel = lastFilled ? THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(lastFilled.cal)] : "-";
-      return { ind: k, monthly, avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel };
+      return { ind: k, monthly: inFilter.map((x) => x.v), avg, tone, monthsPassed, monthsWithData, diff, diffPct, lastFilledLabel };
     });
 
     // Non-conforming table — leaf indicators failing target
