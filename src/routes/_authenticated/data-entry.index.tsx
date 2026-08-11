@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Send, CheckCircle2, History, RefreshCw } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
@@ -48,10 +48,11 @@ const todayCalMonth = new Date().getMonth() + 1;
 
 function DataEntryPage() {
   const { fiscalYear } = useFiscalYear();
-  const { hasAnyRole, profile, hasRole } = useAuth();
+  const { hasAnyRole, profile, hasRole, roles } = useAuth();
   const qc = useQueryClient();
   const isStaff = hasRole("staff") && !hasAnyRole(["admin", "manager"]);
   const canApprove = hasAnyRole(["admin", "manager"]);
+  const canEnter = hasAnyRole(["admin", "manager", "staff"]);
 
   const [month, setMonth] = useState<number>(todayCalMonth);
   const [deptId, setDeptId] = useState<string>("");
@@ -156,7 +157,20 @@ function DataEntryPage() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["pending-count"] });
     },
-    onError: (e) => toast.error("บันทึกไม่สำเร็จ: " + e.message),
+    onError: (e) => {
+      const msg = e.message ?? "";
+      const isPermission =
+        /row-level security|permission denied|violates row-level|42501/i.test(msg);
+      if (isPermission) {
+        toast.error("บัญชีของคุณไม่มีสิทธิ์บันทึกผลวัด", {
+          description:
+            "การบันทึกผลวัดต้องเป็นผู้ใช้สิทธิ์ staff (บันทึกได้เฉพาะตัวชี้วัดของหน่วยงานตนเอง), manager หรือ admin (บันทึก/อนุมัติได้ทุกหน่วยงาน) และบัญชีต้องอยู่ในสถานะใช้งาน พร้อมมีหน่วยงานกำกับในโปรไฟล์ — กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์",
+          duration: 10000,
+        });
+        return;
+      }
+      toast.error("บันทึกไม่สำเร็จ: " + msg);
+    },
   });
 
   const pending = useMemo(() => {
@@ -175,6 +189,29 @@ function DataEntryPage() {
         </div>
         <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
       </div>
+
+      {!canEnter && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <div className="flex gap-2">
+            <ShieldAlert className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium text-destructive">บัญชีของคุณไม่มีสิทธิ์บันทึกผลวัด</p>
+              <p className="text-muted-foreground">
+                สิทธิ์ปัจจุบัน: {roles.length ? roles.join(", ") : "ไม่มีสิทธิ์ที่กำหนด"} — การบันทึกผลวัดต้องมีสิทธิ์อย่างใดอย่างหนึ่งดังนี้
+              </p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                <li><b>staff</b> — บันทึกได้เฉพาะตัวชี้วัดของหน่วยงาน (สาขางาน) ที่ระบุในโปรไฟล์ของตนเอง</li>
+                <li><b>manager</b> หรือ <b>admin</b> — บันทึกและอนุมัติได้ทุกหน่วยงาน</li>
+              </ul>
+              <p className="text-muted-foreground">
+                นอกจากนี้บัญชีต้องอยู่ในสถานะใช้งาน (active) และมีหน่วยงานกำกับในโปรไฟล์ — กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       <Card>
         <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
