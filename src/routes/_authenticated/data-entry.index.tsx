@@ -189,6 +189,29 @@ function DataEntryPage() {
         <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
       </div>
 
+      {!canEnter && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <div className="flex gap-2">
+            <ShieldAlert className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium text-destructive">บัญชีของคุณไม่มีสิทธิ์บันทึกผลวัด</p>
+              <p className="text-muted-foreground">
+                สิทธิ์ปัจจุบัน: {roles.length ? roles.join(", ") : "ไม่มีสิทธิ์ที่กำหนด"} — การบันทึกผลวัดต้องมีสิทธิ์อย่างใดอย่างหนึ่งดังนี้
+              </p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                <li><b>staff</b> — บันทึกได้เฉพาะตัวชี้วัดของหน่วยงาน (สาขางาน) ที่ระบุในโปรไฟล์ของตนเอง</li>
+                <li><b>manager</b> หรือ <b>admin</b> — บันทึกและอนุมัติได้ทุกหน่วยงาน</li>
+              </ul>
+              <p className="text-muted-foreground">
+                นอกจากนี้บัญชีต้องอยู่ในสถานะใช้งาน (active) และมีหน่วยงานกำกับในโปรไฟล์ — กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
       <Card>
         <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           <div>
