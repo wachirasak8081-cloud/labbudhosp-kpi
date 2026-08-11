@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
@@ -173,6 +173,25 @@ function DataEntryPage() {
     },
   });
 
+  const isAdmin = hasRole("admin");
+
+  const unlock = useMutation({
+    mutationFn: async (measurementId: string) => {
+      const { error } = await supabase
+        .from("measurements")
+        .update({ status: "draft" })
+        .eq("id", measurementId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("ปลดล็อกรายการแล้ว สามารถแก้ไขข้อมูลได้");
+      qc.invalidateQueries({ queryKey: ["data-entry"] });
+      qc.invalidateQueries({ queryKey: ["pending-count"] });
+    },
+    onError: (e: { message?: string }) =>
+      toast.error("ปลดล็อกไม่สำเร็จ: " + (e.message ?? "")),
+  });
+
   const pending = useMemo(() => {
     return (data?.inds ?? []).filter((ind) => {
       const m = measByInd.get(ind.id);
@@ -282,17 +301,18 @@ function DataEntryPage() {
                     const ok = display != null && ind.target_value != null && checkTarget(display, ind.target_value, ind.target_condition);
                     const colorCls = display == null ? "" : ok ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold";
                     const approved = m?.status === "approved";
+                    const locked = approved && !isAdmin;
                     return (
                       <TableRow key={ind.id} className={approved ? "bg-emerald-50/30" : ""}>
                         <TableCell className="font-mono text-xs">{ind.code}</TableCell>
                         <TableCell className="text-sm">{ind.name_th}</TableCell>
                         <TableCell>
-                          <Input type="number" step="0.01" inputMode="decimal" disabled={approved}
+                          <Input type="number" step="0.01" inputMode="decimal" disabled={locked}
                             value={r.num} onChange={(e) => setRow(ind.id, { num: e.target.value })}
                             className="h-8 text-right" />
                         </TableCell>
                         <TableCell>
-                          <Input type="number" step="0.01" inputMode="decimal" disabled={approved}
+                          <Input type="number" step="0.01" inputMode="decimal" disabled={locked}
                             value={r.den} onChange={(e) => setRow(ind.id, { den: e.target.value })}
                             className="h-8 text-right" />
                         </TableCell>
@@ -303,11 +323,22 @@ function DataEntryPage() {
                           {targetSymbol(ind.target_condition)} {ind.target_value ?? "-"}{ind.unit ?? ""}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={m?.status} />
+                          <div className="flex items-center gap-1">
+                            <StatusBadge status={m?.status} />
+                            {approved && isAdmin && m && (
+                              <Button size="sm" variant="ghost" className="h-7 px-2"
+                                title="ปลดล็อกเพื่อแก้ไข"
+                                disabled={unlock.isPending}
+                                onClick={() => unlock.mutate(m.id)}>
+                                <Unlock className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
                   })}
+
                 </TableBody>
               </Table>
             </div>
