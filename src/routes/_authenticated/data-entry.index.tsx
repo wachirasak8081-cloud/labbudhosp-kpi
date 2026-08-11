@@ -156,7 +156,20 @@ function DataEntryPage() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["pending-count"] });
     },
-    onError: (e) => toast.error("บันทึกไม่สำเร็จ: " + e.message),
+    onError: (e) => {
+      const msg = e.message ?? "";
+      const isPermission =
+        /row-level security|permission denied|violates row-level|42501/i.test(msg);
+      if (isPermission) {
+        toast.error("บัญชีของคุณไม่มีสิทธิ์บันทึกผลวัด", {
+          description:
+            "การบันทึกผลวัดต้องเป็นผู้ใช้สิทธิ์ staff (บันทึกได้เฉพาะตัวชี้วัดของหน่วยงานตนเอง), manager หรือ admin (บันทึก/อนุมัติได้ทุกหน่วยงาน) และบัญชีต้องอยู่ในสถานะใช้งาน พร้อมมีหน่วยงานกำกับในโปรไฟล์ — กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์",
+          duration: 10000,
+        });
+        return;
+      }
+      toast.error("บันทึกไม่สำเร็จ: " + msg);
+    },
   });
 
   const pending = useMemo(() => {
