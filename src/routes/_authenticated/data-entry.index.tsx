@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
