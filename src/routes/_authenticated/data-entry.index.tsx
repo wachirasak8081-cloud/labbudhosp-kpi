@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Send, CheckCircle2, History, RefreshCw } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
@@ -48,10 +48,11 @@ const todayCalMonth = new Date().getMonth() + 1;
 
 function DataEntryPage() {
   const { fiscalYear } = useFiscalYear();
-  const { hasAnyRole, profile, hasRole } = useAuth();
+  const { hasAnyRole, profile, hasRole, roles } = useAuth();
   const qc = useQueryClient();
   const isStaff = hasRole("staff") && !hasAnyRole(["admin", "manager"]);
   const canApprove = hasAnyRole(["admin", "manager"]);
+  const canEnter = hasAnyRole(["admin", "manager", "staff"]);
 
   const [month, setMonth] = useState<number>(todayCalMonth);
   const [deptId, setDeptId] = useState<string>("");
