@@ -173,6 +173,25 @@ function DataEntryPage() {
     },
   });
 
+  const isAdmin = hasRole("admin");
+
+  const unlock = useMutation({
+    mutationFn: async (measurementId: string) => {
+      const { error } = await supabase
+        .from("measurements")
+        .update({ status: "draft" })
+        .eq("id", measurementId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("ปลดล็อกรายการแล้ว สามารถแก้ไขข้อมูลได้");
+      qc.invalidateQueries({ queryKey: ["data-entry"] });
+      qc.invalidateQueries({ queryKey: ["pending-count"] });
+    },
+    onError: (e: { message?: string }) =>
+      toast.error("ปลดล็อกไม่สำเร็จ: " + (e.message ?? "")),
+  });
+
   const pending = useMemo(() => {
     return (data?.inds ?? []).filter((ind) => {
       const m = measByInd.get(ind.id);
