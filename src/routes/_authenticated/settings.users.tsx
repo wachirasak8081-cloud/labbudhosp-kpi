@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/settings/users")({
   component: AdminUsersPage,
 });
 
-type AppUser = { id: string; email: string; created_at: string; profile: { full_name: string; department_id: string | null; is_active: boolean } | null; roles: string[] };
+type AppUser = { id: string; email: string; created_at: string; profile: { full_name: string; department_id: string | null; is_active: boolean } | null; roles: string[]; department_ids: string[] };
 
 const ROLE_LABELS: Record<AppRole, string> = { admin: "ผู้ดูแลระบบ", manager: "ผู้จัดการ", staff: "เจ้าหน้าที่", auditor: "ผู้ตรวจสอบ" };
 
@@ -96,7 +95,13 @@ function UsersInner() {
                     <div className="font-medium text-sm">{u.profile?.full_name || "—"}</div>
                     <div className="text-xs text-muted-foreground">{u.email}</div>
                   </TableCell>
-                  <TableCell className="text-sm">{u.profile?.department_id ? deptMap.get(u.profile.department_id) : "—"}</TableCell>
+                  <TableCell className="text-sm">
+                    {u.department_ids.length ? (
+                      <div className="flex flex-wrap gap-1 max-w-[260px]">
+                        {u.department_ids.map((d) => <Badge key={d} variant="secondary" className="text-[10px]">{deptMap.get(d) ?? d}</Badge>)}
+                      </div>
+                    ) : "—"}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {u.roles.map((r) => <Badge key={r} variant="outline">{ROLE_LABELS[r as AppRole] ?? r}</Badge>)}
@@ -129,19 +134,21 @@ function UserDialog({ user, departments, onClose }: { user: AppUser | null; depa
   const [email, setEmail] = useState(user?.email ?? "");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState(user?.profile?.full_name ?? "");
-  const [deptId, setDeptId] = useState<string>(user?.profile?.department_id ?? "none");
+  const [deptIds, setDeptIds] = useState<string[]>(user?.department_ids ?? []);
+  const [deptSearch, setDeptSearch] = useState("");
   const [active, setActive] = useState<boolean>(user?.profile?.is_active ?? true);
   const [roles, setRoles] = useState<AppRole[]>((user?.roles as AppRole[]) ?? ["staff"]);
+
+  const toggleDept = (id: string) => setDeptIds((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
 
   const toggleRole = (r: AppRole) => setRoles((cur) => cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]);
 
   const save = useMutation({
     mutationFn: async () => {
-      const dept = deptId === "none" ? null : deptId;
       if (user) {
-        await updateFn({ data: { user_id: user.id, full_name: fullName, department_id: dept, is_active: active, roles } });
+        await updateFn({ data: { user_id: user.id, full_name: fullName, department_ids: deptIds, is_active: active, roles } });
       } else {
-        await createFn({ data: { email, password, full_name: fullName, department_id: dept, roles } });
+        await createFn({ data: { email, password, full_name: fullName, department_ids: deptIds, roles } });
       }
     },
     onSuccess: () => { toast.success(user ? "อัปเดตแล้ว" : "เพิ่มผู้ใช้แล้ว"); qc.invalidateQueries({ queryKey: ["app-users"] }); onClose(); },
@@ -157,14 +164,31 @@ function UserDialog({ user, departments, onClose }: { user: AppUser | null; depa
           {!user && <div className="space-y-1"><Label className="text-xs">รหัสผ่าน</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>}
           <div className="space-y-1"><Label className="text-xs">ชื่อ-นามสกุล</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
           <div className="space-y-1">
-            <Label className="text-xs">สาขางาน</Label>
-            <Select value={deptId} onValueChange={setDeptId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— ไม่ระบุ —</SelectItem>
-                {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name_th}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">สาขางาน (เลือกได้หลายรายการ)</Label>
+              <span className="text-[11px] text-muted-foreground">เลือกแล้ว {deptIds.length}</span>
+            </div>
+            <Input placeholder="ค้นหาสาขางาน..." value={deptSearch} onChange={(e) => setDeptSearch(e.target.value)} className="h-8" />
+            <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1">
+              {departments
+                .filter((d) => d.name_th.toLowerCase().includes(deptSearch.toLowerCase()))
+                .map((d) => (
+                  <label key={d.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={deptIds.includes(d.id)} onChange={() => toggleDept(d.id)} />
+                    {d.name_th}
+                  </label>
+                ))}
+              {departments.length === 0 && <div className="text-xs text-muted-foreground">ไม่มีข้อมูลสาขางาน</div>}
+            </div>
+            {deptIds.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {deptIds.map((id) => (
+                  <Badge key={id} variant="secondary" className="text-[10px]">
+                    {departments.find((d) => d.id === id)?.name_th ?? id}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <Label className="text-xs">บทบาท</Label>
