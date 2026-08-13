@@ -21,6 +21,15 @@ export const listUsers = createServerFn({ method: "GET" })
       supabaseAdmin.from("profiles").select("id, full_name, department_id, is_active").in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]),
       supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]),
     ]);
+    const { data: userDepts } = await supabaseAdmin
+      .from("user_departments").select("user_id, department_id")
+      .in("user_id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]);
+    const deptMap = new Map<string, string[]>();
+    (userDepts ?? []).forEach((d) => {
+      const arr = deptMap.get(d.user_id) ?? [];
+      arr.push(d.department_id);
+      deptMap.set(d.user_id, arr);
+    });
     const profMap = new Map((profiles ?? []).map((p) => [p.id, p]));
     const roleMap = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
@@ -32,6 +41,7 @@ export const listUsers = createServerFn({ method: "GET" })
       id: u.id, email: u.email ?? "", created_at: u.created_at,
       profile: profMap.get(u.id) ?? null,
       roles: roleMap.get(u.id) ?? [],
+      department_ids: deptMap.get(u.id) ?? [],
     }));
   });
 
@@ -39,7 +49,7 @@ const CreateUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   full_name: z.string().min(1),
-  department_id: z.string().uuid().nullable(),
+  department_ids: z.array(z.string().uuid()).default([]),
   roles: z.array(z.enum(["admin", "manager", "staff", "auditor"])).min(1),
 });
 
@@ -55,7 +65,11 @@ export const createAppUser = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     const uid = created.user!.id;
-    await supabaseAdmin.from("profiles").upsert({ id: uid, full_name: data.full_name, department_id: data.department_id, is_active: true }, { onConflict: "id" });
+    await supabaseAdmin.from("profiles").upsert({ id: uid, full_name: data.full_name, department_id: data.department_ids[0] ?? null, is_active: true }, { onConflict: "id" });
+    await supabaseAdmin.from("user_departments").delete().eq("user_id", uid);
+    if (data.department_ids.length) {
+      await supabaseAdmin.from("user_departments").insert(data.department_ids.map((department_id) => ({ user_id: uid, department_id })));
+    }
     // Trigger inserts 'staff' by default — replace with requested roles
     await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
     await supabaseAdmin.from("user_roles").insert(data.roles.map((role) => ({ user_id: uid, role })));
@@ -65,7 +79,7 @@ export const createAppUser = createServerFn({ method: "POST" })
 const UpdateUserSchema = z.object({
   user_id: z.string().uuid(),
   full_name: z.string().min(1),
-  department_id: z.string().uuid().nullable(),
+  department_ids: z.array(z.string().uuid()).default([]),
   is_active: z.boolean(),
   roles: z.array(z.enum(["admin", "manager", "staff", "auditor"])).min(1),
 });
@@ -76,7 +90,11 @@ export const updateAppUser = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("profiles").upsert({ id: data.user_id, full_name: data.full_name, department_id: data.department_id, is_active: data.is_active }, { onConflict: "id" });
+    await supabaseAdmin.from("profiles").upsert({ id: data.user_id, full_name: data.full_name, department_id: data.department_ids[0] ?? null, is_active: data.is_active }, { onConflict: "id" });
+    await supabaseAdmin.from("user_departments").delete().eq("user_id", data.user_id);
+    if (data.department_ids.length) {
+      await supabaseAdmin.from("user_departments").insert(data.department_ids.map((department_id) => ({ user_id: data.user_id, department_id })));
+    }
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
     await supabaseAdmin.from("user_roles").insert(data.roles.map((role) => ({ user_id: data.user_id, role: role as AppRole })));
     return { ok: true };
