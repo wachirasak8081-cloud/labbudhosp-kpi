@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -91,7 +92,7 @@ function TargetsPage() {
                     <TableCell className="font-mono text-xs">{i.code}</TableCell>
                     <TableCell className="text-sm">{i.name_th}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{i.level}</TableCell>
-                    <TableCell className="text-right">{i.target_value ?? "—"} {i.unit ?? ""}</TableCell>
+                    <TableCell className="text-right">{formatTargetValue(i.code, i.target_value)} {i.unit ?? ""}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{condLabel(i.target_condition)}</TableCell>
                     <TableCell><Button size="sm" variant="ghost" onClick={() => setEditing(i)}><Pencil className="w-3.5 h-3.5 mr-1" />ปรับ</Button></TableCell>
                   </TableRow>
@@ -174,7 +175,7 @@ function EditTargetDialog({ ind, fiscalYear, onClose }: { ind: Ind; fiscalYear: 
           <div className="space-y-1">
             <Label className="text-xs">ค่าเป้าหมายใหม่ ({ind.unit ?? "%"})</Label>
             <Input type="number" step="0.01" value={value} onChange={(e) => setValue(e.target.value)} />
-            <div className="text-[10px] text-muted-foreground">เป้าหมายเดิม: {ind.target_value ?? "—"}</div>
+            <div className="text-[10px] text-muted-foreground">เป้าหมายเดิม: {formatTargetValue(ind.code, ind.target_value)}</div>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">เหตุผลในการปรับ</Label>

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, TrendingUp, TrendingDown, Circle, AlertTriangle, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { sortIndicators } from "@/lib/indicator-sort";
-import { decimalsFor, formatIndicatorValue } from "@/lib/indicator-format";
+import { decimalsFor, formatIndicatorValue, registerIndicatorDecimals } from "@/lib/indicator-format";
 import { toneFor, targetSymbol } from "@/lib/indicator-status";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 

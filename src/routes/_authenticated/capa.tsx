@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
-import { formatIndicatorValue, decimalsFor } from "@/lib/indicator-format";
+import { formatIndicatorValue, decimalsFor, registerIndicatorDecimals } from "@/lib/indicator-format";
 import {
   APPROVAL_LABEL, EFFECTIVENESS_LABEL, NC_SOURCE_LABEL, PDCA_LABEL, SEVERITY_LABEL, SEVERITY_TONE,
   calcSeverity,
