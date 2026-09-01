@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Download, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useAuth } from "@/hooks/use-auth";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,7 +73,7 @@ function CapaPage() {
         supabase.from("corrective_actions").select("*").eq("fiscal_year", fiscalYear).order("created_at", { ascending: false }),
         supabase.from("indicators").select("id, code, name_th, department_id, target_value, is_leaf, is_inverted, target_condition, sort_order").order("sort_order").order("code"),
         supabase.from("departments").select("id, name_th").order("name_th"),
-        supabase.from("measurements").select("indicator_id, fiscal_year, period_month, calculated_value").eq("fiscal_year", fiscalYear),
+        fetchAll<{ indicator_id: string; fiscal_year: number; period_month: number | null; calculated_value: number | null }>((f, t) => supabase.from("measurements").select("indicator_id, fiscal_year, period_month, calculated_value").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
       const { sortIndicators } = await import("@/lib/indicator-sort");
       return {

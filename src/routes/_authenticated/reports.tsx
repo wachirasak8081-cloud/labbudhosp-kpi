@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +83,7 @@ function MatrixSection() {
       const [{ data: depts }, { data: inds }, { data: meas }] = await Promise.all([
         supabase.from("departments").select("id, name_th").order("name_th"),
         supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
-        supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
+        fetchAll<Meas>((f, t) => supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
       return { depts: (depts ?? []) as Dept[], inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[] };
     },
@@ -248,7 +249,7 @@ function AnnualReportSection() {
     queryFn: async () => {
       const [{ data: inds }, { data: meas }, { data: capa }] = await Promise.all([
         supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
-        supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear),
+        fetchAll<Meas>((f, t) => supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
         supabase.from("corrective_actions").select("*").eq("fiscal_year", fiscalYear).order("created_at"),
       ]);
       return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[], capa: capa ?? [] };
@@ -690,7 +691,7 @@ function CompareSection() {
     queryFn: async () => {
       const [{ data: inds }, { data: meas }, { data: depts }] = await Promise.all([
         supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order").eq("is_active", true).order("sort_order").order("code"),
-        supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear),
+        fetchAll((f, t) => supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
         supabase.from("departments").select("id, name_th"),
       ]);
       return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[], depts: (depts ?? []) as Dept[] };
@@ -769,7 +770,7 @@ function RecordingStatusSection() {
       const [{ data: depts }, { data: inds }, { data: meas }] = await Promise.all([
         supabase.from("departments").select("id, name_th").eq("is_active", true).order("name_th"),
         supabase.from("indicators").select("id, department_id").eq("is_active", true).eq("is_leaf", true),
-        supabase.from("measurements").select("indicator_id, period_month, status").eq("fiscal_year", fiscalYear),
+        fetchAll((f, t) => supabase.from("measurements").select("indicator_id, period_month, status").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
       return { depts: (depts ?? []) as Dept[], inds: (inds ?? []) as { id: string; department_id: string | null }[], meas: (meas ?? []) as Array<{ indicator_id: string; period_month: number; status: string }> };
     },
