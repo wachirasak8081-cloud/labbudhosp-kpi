@@ -73,6 +73,7 @@ function DashboardPage() {
         supabase.from("corrective_actions").select("indicator_id, status").eq("fiscal_year", fiscalYear),
         supabase.from("annual_objective_summary").select("objective_id, fiscal_year, value"),
       ]);
+      registerIndicatorDecimals((inds ?? []) as Ind[]);
       return {
         inds: sortIndicators((inds ?? []) as Ind[]),
         meas: (meas ?? []) as MeasBasic[],

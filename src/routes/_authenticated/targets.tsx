@@ -51,6 +51,7 @@ function TargetsPage() {
         supabase.from("profiles").select("id, full_name"),
       ]);
       const { sortIndicators } = await import("@/lib/indicator-sort");
+      registerIndicatorDecimals((inds ?? []) as Ind[]);
       return { inds: sortIndicators((inds ?? []) as Ind[]), hist: (hist ?? []) as History[], profiles: profiles ?? [] };
     },
   });

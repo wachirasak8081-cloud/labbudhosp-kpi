@@ -76,6 +76,7 @@ function CapaPage() {
         fetchAll<{ indicator_id: string; fiscal_year: number; period_month: number | null; calculated_value: number | null }>((f, t) => supabase.from("measurements").select("indicator_id, fiscal_year, period_month, calculated_value").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
       const { sortIndicators } = await import("@/lib/indicator-sort");
+      registerIndicatorDecimals((inds ?? []) as Indicator[]);
       return {
         capa: (capa ?? []) as CAPA[],
         inds: sortIndicators((inds ?? []) as Indicator[]),

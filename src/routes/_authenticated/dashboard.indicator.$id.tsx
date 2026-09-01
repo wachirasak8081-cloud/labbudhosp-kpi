@@ -55,6 +55,7 @@ function IndicatorDetailPage() {
         const { data: cm } = await supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear).in("indicator_id", children.map((c) => c.id));
         childMeas = cm ?? [];
       }
+      registerIndicatorDecimals([...(ind ? [ind] : []), ...(children ?? [])] as Array<{ code: string; target_value: number | null }>);
       return { ind, meas: meas ?? [], capa: capa ?? [], children: children ?? [], childMeas, depts: depts ?? [], profiles: profiles ?? [] };
     },
   });
