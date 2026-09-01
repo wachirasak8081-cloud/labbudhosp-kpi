@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,9 @@ function IndicatorsPage() {
         supabase.from("departments").select("id, name_th, code"),
       ]);
       const { sortIndicators } = await import("@/lib/indicator-sort");
-      return { inds: sortIndicators((inds ?? []) as Indicator[]), depts: depts ?? [] };
+      const sorted = sortIndicators((inds ?? []) as Indicator[]);
+      registerIndicatorDecimals(sorted);
+      return { inds: sorted, depts: depts ?? [] };
     },
   });
 
@@ -194,7 +197,7 @@ function IndicatorNode({ node, deptMap, canEdit, onEdit, onAddChild, onDelete, o
         <span className="font-medium text-sm flex-1 truncate">{i.name_th}</span>
         {i.target_value != null && (
           <Badge variant="outline" className="text-xs shrink-0">
-            เป้า {targetSymbol(i.target_condition)} {i.target_value}{i.unit ?? ""}
+            เป้า {targetSymbol(i.target_condition)} {formatTargetValue(i.code, i.target_value)}{i.unit ?? ""}
           </Badge>
         )}
         {freqLabel && <span className="text-[11px] text-muted-foreground hidden lg:inline shrink-0">{freqLabel}</span>}
@@ -308,7 +311,7 @@ function IndicatorDialog({ open, onClose, indicator, parent, departments }: {
             </Select>
           </Field>
           <Field label="ค่าเป้าหมาย">
-            <Input type="number" step="0.01" value={form.target_value ?? ""} onChange={(e) => setForm({ ...form, target_value: e.target.value === "" ? null : parseFloat(e.target.value) })} />
+            <Input type="number" step="0.0001" value={form.target_value ?? ""} onChange={(e) => setForm({ ...form, target_value: e.target.value === "" ? null : parseFloat(e.target.value) })} />
           </Field>
           <Field label="เงื่อนไขเป้า">
             <Select value={form.target_condition ?? "gte"} onValueChange={(v) => setForm({ ...form, target_condition: v })}>
