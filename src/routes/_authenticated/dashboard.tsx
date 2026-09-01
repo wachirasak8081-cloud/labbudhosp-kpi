@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, TrendingUp, TrendingDown, Circle, AlertTriangle, CheckCircle2, Clock, ChevronRight } from "lucide-react";
@@ -66,9 +67,9 @@ function DashboardPage() {
         supabase.from("indicators")
           .select("id, code, name_th, level, parent_id, target_value, target_condition, is_inverted, is_leaf, is_active, frequency, sort_order")
           .eq("is_active", true).order("sort_order").order("code"),
-        supabase.from("measurements")
+        fetchAll<MeasBasic>((f, t) => supabase.from("measurements")
           .select("indicator_id, period_month, calculated_value")
-          .eq("fiscal_year", fiscalYear),
+          .eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
         supabase.from("corrective_actions").select("indicator_id, status").eq("fiscal_year", fiscalYear),
         supabase.from("annual_objective_summary").select("objective_id, fiscal_year, value"),
       ]);
