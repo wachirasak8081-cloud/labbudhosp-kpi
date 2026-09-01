@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from "recharts";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
-import { formatIndicatorValue, decimalsFor } from "@/lib/indicator-format";
+import { formatIndicatorValue, decimalsFor, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +55,7 @@ function IndicatorDetailPage() {
         const { data: cm } = await supabase.from("measurements").select("indicator_id, period_month, calculated_value").eq("fiscal_year", fiscalYear).in("indicator_id", children.map((c) => c.id));
         childMeas = cm ?? [];
       }
+      registerIndicatorDecimals([...(ind ? [ind] : []), ...(children ?? [])] as Array<{ code: string; target_value: number | null }>);
       return { ind, meas: meas ?? [], capa: capa ?? [], children: children ?? [], childMeas, depts: depts ?? [], profiles: profiles ?? [] };
     },
   });
@@ -83,7 +84,7 @@ function IndicatorDetailPage() {
           <Info label="รหัส" value={ind.code} />
           <Info label="ระดับ" value={ind.level} />
           <Info label="หน่วยงาน" value={deptName} />
-          <Info label="เป้าหมาย" value={ind.target_value != null ? `${ind.target_value} ${ind.unit ?? ""}` : "—"} />
+          <Info label="เป้าหมาย" value={ind.target_value != null ? `${formatTargetValue(ind.code, ind.target_value)} ${ind.unit ?? ""}` : "—"} />
           <Info label="ทิศทาง" value={ind.is_inverted ? "ยิ่งน้อยยิ่งดี" : "ยิ่งมากยิ่งดี"} />
           <Info label="ความถี่" value={ind.frequency ?? "—"} />
           <div className="col-span-2 sm:col-span-4">
@@ -103,7 +104,7 @@ function IndicatorDetailPage() {
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} domain={[0, 110]} />
                 <Tooltip />
-                {ind.target_value != null && <ReferenceLine y={ind.target_value} stroke="hsl(var(--destructive))" strokeDasharray="4 4" label={{ value: `เป้า ${ind.target_value}`, fontSize: 10, position: "right" }} />}
+                {ind.target_value != null && <ReferenceLine y={ind.target_value} stroke="hsl(var(--destructive))" strokeDasharray="4 4" label={{ value: `เป้า ${formatTargetValue(ind.code, ind.target_value)}`, fontSize: 10, position: "right" }} />}
                 <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               </LineChart>
             </ResponsiveContainer>

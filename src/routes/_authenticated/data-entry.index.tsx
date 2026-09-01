@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
 import { useAuth } from "@/hooks/use-auth";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
-import { formatIndicatorValue } from "@/lib/indicator-format";
+import { formatIndicatorValue, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +92,7 @@ function DataEntryPage() {
           .eq("fiscal_year", fiscalYear).eq("period_month", month),
       ]);
       const { sortIndicators } = await import("@/lib/indicator-sort");
+      registerIndicatorDecimals((inds ?? []) as Indicator[]);
       return { inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Measurement[] };
     },
   });
@@ -320,7 +321,7 @@ function DataEntryPage() {
                           {formatIndicatorValue(ind.code, display)}
                         </TableCell>
                         <TableCell className="text-right text-sm text-muted-foreground">
-                          {targetSymbol(ind.target_condition)} {ind.target_value ?? "-"}{ind.unit ?? ""}
+                          {targetSymbol(ind.target_condition)} {formatTargetValue(ind.code, ind.target_value, "-")}{ind.unit ?? ""}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">

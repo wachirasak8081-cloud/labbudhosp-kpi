@@ -19,7 +19,7 @@ import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from 
 import { sortIndicators } from "@/lib/indicator-sort";
 import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
 
-import { decimalsFor } from "@/lib/indicator-format";
+import { decimalsFor, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from "recharts";
 import { toast } from "sonner";
@@ -85,6 +85,7 @@ function MatrixSection() {
         supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
         fetchAll<Meas>((f, t) => supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
+      registerIndicatorDecimals((inds ?? []) as Indicator[]);
       return { depts: (depts ?? []) as Dept[], inds: sortIndicators((inds ?? []) as Indicator[]), meas: (meas ?? []) as Meas[] };
     },
   });
