@@ -57,6 +57,9 @@ function DataEntryPage() {
 
   const [month, setMonth] = useState<number>(todayCalMonth);
   const [deptId, setDeptId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [onlyPending, setOnlyPending] = useState(false);
+
 
   const { data: depts } = useQuery({
     queryKey: ["depts"],
