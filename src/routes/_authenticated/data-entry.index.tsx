@@ -333,7 +333,23 @@ function DataEntryPage() {
             โหลดข้อมูล
           </Button>
         </CardContent>
+        <CardContent className="px-4 pb-4 pt-0 flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="ค้นหารหัสหรือชื่อตัวชี้วัด" className="pl-8" />
+          </div>
+          <Button variant={onlyPending ? "default" : "outline"} onClick={() => setOnlyPending((v) => !v)}>
+            เฉพาะที่ยังไม่บันทึก
+          </Button>
+          <Button variant="outline" onClick={() => copyPrev.mutate()}
+            disabled={copyPrev.isPending || !canEnter || !data?.inds.length}>
+            {copyPrev.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CopyPlus className="w-4 h-4 mr-2" />}
+            คัดลอกข้อมูลเดือนก่อน
+          </Button>
+        </CardContent>
       </Card>
+
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
