@@ -377,10 +377,11 @@ function DataEntryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(data?.inds ?? []).length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ไม่มีตัวชี้วัดในสาขานี้</TableCell></TableRow>
+                  {visibleInds.length === 0 && (
+                    <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ไม่พบตัวชี้วัดตามเงื่อนไขที่เลือก</TableCell></TableRow>
                   )}
-                  {(data?.inds ?? []).map((ind) => {
+                  {visibleInds.map((ind) => {
+
                     const r = rows[ind.id] ?? { num: "", den: "", dirty: false };
                     const m = measByInd.get(ind.id);
                     const num = r.num === "" ? null : parseFloat(r.num);
