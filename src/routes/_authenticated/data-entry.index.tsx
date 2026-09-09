@@ -272,7 +272,11 @@ function DataEntryPage() {
           <h1 className="text-2xl font-semibold tracking-tight">บันทึกข้อมูลตัวชี้วัด</h1>
           <p className="text-sm text-muted-foreground">กรอกผลตัวตั้ง/ตัวหารของตัวชี้วัดระดับล่างสุด ระบบจะคำนวณค่าให้อัตโนมัติ</p>
         </div>
-        <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link to="/data-entry/import"><Upload className="w-4 h-4 mr-2" />นำเข้าจาก Excel</Link></Button>
+          <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
+        </div>
+
       </div>
 
       {!canEnter && (
