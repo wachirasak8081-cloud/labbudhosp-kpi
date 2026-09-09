@@ -363,7 +363,7 @@ function DataEntryPage() {
 
               {pending > 0 && <Badge variant="destructive">รอบันทึก {pending} รายการ</Badge>}
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
