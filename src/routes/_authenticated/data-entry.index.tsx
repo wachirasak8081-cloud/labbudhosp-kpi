@@ -204,6 +204,67 @@ function DataEntryPage() {
     }).length;
   }, [data, measByInd]);
 
+  const visibleInds = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (data?.inds ?? []).filter((ind) => {
+      if (q && !(ind.code.toLowerCase().includes(q) || ind.name_th.toLowerCase().includes(q))) return false;
+      if (onlyPending) {
+        const m = measByInd.get(ind.id);
+        const r = rows[ind.id];
+        const hasInput = !!(r && (r.num !== "" || r.den !== ""));
+        if (hasInput || (m && m.calculated_value != null)) return false;
+      }
+      return true;
+    });
+  }, [data, search, onlyPending, measByInd, rows]);
+
+  const copyPrev = useMutation({
+    mutationFn: async () => {
+      const idx = FISCAL_MONTH_TO_CAL.indexOf(month);
+      if (idx <= 0) throw new Error("เดือนนี้เป็นเดือนแรกของปีงบประมาณ ไม่มีเดือนก่อนหน้า");
+      const prevMonth = FISCAL_MONTH_TO_CAL[idx - 1];
+      const ids = (data?.inds ?? []).map((i) => i.id);
+      if (!ids.length) return 0;
+      const { data: prev, error } = await supabase
+        .from("measurements")
+        .select("indicator_id, numerator, denominator")
+        .eq("fiscal_year", fiscalYear)
+        .eq("period_month", prevMonth)
+        .in("indicator_id", ids);
+      if (error) throw error;
+      const byInd = new Map(
+        ((prev ?? []) as { indicator_id: string; numerator: number | null; denominator: number | null }[])
+          .map((p) => [p.indicator_id, p]),
+      );
+      let filled = 0;
+      setRows((cur) => {
+        const next = { ...cur };
+        for (const ind of data?.inds ?? []) {
+          const m = measByInd.get(ind.id);
+          if (m?.status === "approved") continue;
+          const r = next[ind.id];
+          if (!r || (r.num !== "" || r.den !== "")) continue;
+          const p = byInd.get(ind.id);
+          if (!p || (p.numerator == null && p.denominator == null)) continue;
+          next[ind.id] = {
+            num: p.numerator?.toString() ?? "",
+            den: p.denominator?.toString() ?? "",
+            dirty: true,
+          };
+          filled++;
+        }
+        return next;
+      });
+      return filled;
+    },
+    onSuccess: (n) => {
+      if (n) toast.success(`เติมข้อมูลจากเดือนก่อนหน้า ${n} รายการ — ตรวจทานแล้วกดบันทึก`);
+      else toast.info("ไม่มีข้อมูลเดือนก่อนหน้าที่จะเติมในช่องว่าง");
+    },
+    onError: (e: { message?: string }) => toast.error(e.message ?? "คัดลอกไม่สำเร็จ"),
+  });
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
