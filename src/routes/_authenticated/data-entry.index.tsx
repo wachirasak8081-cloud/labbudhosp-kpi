@@ -13,8 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert, Unlock } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert, Unlock, Search, CopyPlus, Upload } from "lucide-react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
   head: () => ({
@@ -56,6 +57,9 @@ function DataEntryPage() {
 
   const [month, setMonth] = useState<number>(todayCalMonth);
   const [deptId, setDeptId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [onlyPending, setOnlyPending] = useState(false);
+
 
   const { data: depts } = useQuery({
     queryKey: ["depts"],
@@ -200,6 +204,67 @@ function DataEntryPage() {
     }).length;
   }, [data, measByInd]);
 
+  const visibleInds = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (data?.inds ?? []).filter((ind) => {
+      if (q && !(ind.code.toLowerCase().includes(q) || ind.name_th.toLowerCase().includes(q))) return false;
+      if (onlyPending) {
+        const m = measByInd.get(ind.id);
+        const r = rows[ind.id];
+        const hasInput = !!(r && (r.num !== "" || r.den !== ""));
+        if (hasInput || (m && m.calculated_value != null)) return false;
+      }
+      return true;
+    });
+  }, [data, search, onlyPending, measByInd, rows]);
+
+  const copyPrev = useMutation({
+    mutationFn: async () => {
+      const idx = FISCAL_MONTH_TO_CAL.indexOf(month);
+      if (idx <= 0) throw new Error("เดือนนี้เป็นเดือนแรกของปีงบประมาณ ไม่มีเดือนก่อนหน้า");
+      const prevMonth = FISCAL_MONTH_TO_CAL[idx - 1];
+      const ids = (data?.inds ?? []).map((i) => i.id);
+      if (!ids.length) return 0;
+      const { data: prev, error } = await supabase
+        .from("measurements")
+        .select("indicator_id, numerator, denominator")
+        .eq("fiscal_year", fiscalYear)
+        .eq("period_month", prevMonth)
+        .in("indicator_id", ids);
+      if (error) throw error;
+      const byInd = new Map(
+        ((prev ?? []) as { indicator_id: string; numerator: number | null; denominator: number | null }[])
+          .map((p) => [p.indicator_id, p]),
+      );
+      let filled = 0;
+      setRows((cur) => {
+        const next = { ...cur };
+        for (const ind of data?.inds ?? []) {
+          const m = measByInd.get(ind.id);
+          if (m?.status === "approved") continue;
+          const r = next[ind.id];
+          if (!r || (r.num !== "" || r.den !== "")) continue;
+          const p = byInd.get(ind.id);
+          if (!p || (p.numerator == null && p.denominator == null)) continue;
+          next[ind.id] = {
+            num: p.numerator?.toString() ?? "",
+            den: p.denominator?.toString() ?? "",
+            dirty: true,
+          };
+          filled++;
+        }
+        return next;
+      });
+      return filled;
+    },
+    onSuccess: (n) => {
+      if (n) toast.success(`เติมข้อมูลจากเดือนก่อนหน้า ${n} รายการ — ตรวจทานแล้วกดบันทึก`);
+      else toast.info("ไม่มีข้อมูลเดือนก่อนหน้าที่จะเติมในช่องว่าง");
+    },
+    onError: (e: { message?: string }) => toast.error(e.message ?? "คัดลอกไม่สำเร็จ"),
+  });
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -207,7 +272,11 @@ function DataEntryPage() {
           <h1 className="text-2xl font-semibold tracking-tight">บันทึกข้อมูลตัวชี้วัด</h1>
           <p className="text-sm text-muted-foreground">กรอกผลตัวตั้ง/ตัวหารของตัวชี้วัดระดับล่างสุด ระบบจะคำนวณค่าให้อัตโนมัติ</p>
         </div>
-        <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link to="/data-entry/import"><Upload className="w-4 h-4 mr-2" />นำเข้าจาก Excel</Link></Button>
+          <Button asChild variant="outline"><Link to="/data-entry/history"><History className="w-4 h-4 mr-2" />ประวัติการบันทึก</Link></Button>
+        </div>
+
       </div>
 
       {!canEnter && (
@@ -264,7 +333,23 @@ function DataEntryPage() {
             โหลดข้อมูล
           </Button>
         </CardContent>
+        <CardContent className="px-4 pb-4 pt-0 flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="ค้นหารหัสหรือชื่อตัวชี้วัด" className="pl-8" />
+          </div>
+          <Button variant={onlyPending ? "default" : "outline"} onClick={() => setOnlyPending((v) => !v)}>
+            เฉพาะที่ยังไม่บันทึก
+          </Button>
+          <Button variant="outline" onClick={() => copyPrev.mutate()}
+            disabled={copyPrev.isPending || !canEnter || !data?.inds.length}>
+            {copyPrev.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CopyPlus className="w-4 h-4 mr-2" />}
+            คัดลอกข้อมูลเดือนก่อน
+          </Button>
+        </CardContent>
       </Card>
+
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
@@ -272,10 +357,13 @@ function DataEntryPage() {
         <Card>
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-4 py-2 border-b text-sm bg-muted/30">
-              <span>ตัวชี้วัดทั้งหมด <b>{data?.inds.length ?? 0}</b> รายการ</span>
+              <span>
+                แสดง <b>{visibleInds.length}</b> จากทั้งหมด <b>{data?.inds.length ?? 0}</b> รายการ
+              </span>
+
               {pending > 0 && <Badge variant="destructive">รอบันทึก {pending} รายการ</Badge>}
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -289,10 +377,11 @@ function DataEntryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(data?.inds ?? []).length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ไม่มีตัวชี้วัดในสาขานี้</TableCell></TableRow>
+                  {visibleInds.length === 0 && (
+                    <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">ไม่พบตัวชี้วัดตามเงื่อนไขที่เลือก</TableCell></TableRow>
                   )}
-                  {(data?.inds ?? []).map((ind) => {
+                  {visibleInds.map((ind) => {
+
                     const r = rows[ind.id] ?? { num: "", den: "", dirty: false };
                     const m = measByInd.get(ind.id);
                     const num = r.num === "" ? null : parseFloat(r.num);
