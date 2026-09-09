@@ -357,7 +357,10 @@ function DataEntryPage() {
         <Card>
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-4 py-2 border-b text-sm bg-muted/30">
-              <span>ตัวชี้วัดทั้งหมด <b>{data?.inds.length ?? 0}</b> รายการ</span>
+              <span>
+                แสดง <b>{visibleInds.length}</b> จากทั้งหมด <b>{data?.inds.length ?? 0}</b> รายการ
+              </span>
+
               {pending > 0 && <Badge variant="destructive">รอบันทึก {pending} รายการ</Badge>}
             </div>
             <div className="overflow-x-auto">
