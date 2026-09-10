@@ -829,8 +829,9 @@ function StatRow({
   const pct = total ? (value / total) * 100 : 0;
   const barColor = color === "green" ? "#16A34A" : color === "amber" ? "#D97706" : "#DC2626";
   return (
-    <div className="flex items-center gap-4 mb-4 last:mb-0">
-      <div className="w-[190px] text-[13px] flex items-center gap-1.5">{icon}{label}</div>
+    <div className="flex items-center gap-2 sm:gap-4 mb-4 last:mb-0">
+      <div className="w-[120px] sm:w-[190px] shrink-0 text-[13px] flex items-center gap-1.5">{icon}{label}</div>
+
       <div className="flex-1 h-2.5 bg-[oklch(0.96_0.008_240)] rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: barColor }} />
       </div>
