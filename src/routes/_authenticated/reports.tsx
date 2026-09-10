@@ -160,7 +160,7 @@ function MatrixSection() {
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           <Label className="text-sm">สาขางาน</Label>
           <Select value={deptFilter} onValueChange={setDeptFilter}>
-            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[220px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">ทุกสาขา</SelectItem>
               {data?.depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name_th}</SelectItem>)}
