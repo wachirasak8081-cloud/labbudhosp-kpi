@@ -432,7 +432,67 @@ function DataEntryPage() {
                 </TableBody>
               </Table>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2 p-3 border-t bg-muted/20">
+
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y">
+              {visibleInds.length === 0 && (
+                <div className="text-center py-10 text-muted-foreground text-sm">ไม่พบตัวชี้วัดตามเงื่อนไขที่เลือก</div>
+              )}
+              {visibleInds.map((ind) => {
+                const r = rows[ind.id] ?? { num: "", den: "", dirty: false };
+                const m = measByInd.get(ind.id);
+                const num = r.num === "" ? null : parseFloat(r.num);
+                const den = r.den === "" ? null : parseFloat(r.den);
+                const live = num != null && den != null && den !== 0 ? (num / den) * 100 : null;
+                const display = live ?? m?.calculated_value ?? null;
+                const ok = display != null && ind.target_value != null && checkTarget(display, ind.target_value, ind.target_condition);
+                const colorCls = display == null ? "" : ok ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold";
+                const approved = m?.status === "approved";
+                const locked = approved && !isAdmin;
+                return (
+                  <div key={ind.id} className={`p-3 space-y-2 ${approved ? "bg-emerald-50/30" : ""}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-mono text-[11px] text-muted-foreground">{ind.code}</div>
+                        <div className="text-sm break-words">{ind.name_th}</div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <StatusBadge status={m?.status} />
+                        {approved && isAdmin && m && (
+                          <Button size="sm" variant="ghost" className="h-7 px-2" title="ปลดล็อกเพื่อแก้ไข"
+                            disabled={unlock.isPending} onClick={() => unlock.mutate(m.id)}>
+                            <Unlock className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[11px] mb-1 block">ตัวตั้ง</Label>
+                        <Input type="number" step="0.01" inputMode="decimal" disabled={locked}
+                          value={r.num} onChange={(e) => setRow(ind.id, { num: e.target.value })}
+                          className="h-9 text-right" />
+                      </div>
+                      <div>
+                        <Label className="text-[11px] mb-1 block">ตัวหาร</Label>
+                        <Input type="number" step="0.01" inputMode="decimal" disabled={locked}
+                          value={r.den} onChange={(e) => setRow(ind.id, { den: e.target.value })}
+                          className="h-9 text-right" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        เป้าหมาย {targetSymbol(ind.target_condition)} {formatTargetValue(ind.code, ind.target_value, "-")}{ind.unit ?? ""}
+                      </span>
+                      <span className={colorCls}>{formatIndicatorValue(ind.code, display)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 p-3 border-t bg-card/95 backdrop-blur md:bg-muted/20">
+
               <Button variant="outline" onClick={() => save.mutate("draft")} disabled={save.isPending || !data?.inds.length}>
                 {save.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}<Save className="w-4 h-4 mr-2" />บันทึกร่าง
               </Button>
