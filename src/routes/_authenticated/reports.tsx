@@ -58,7 +58,7 @@ function ReportsPage() {
   const canCompare = hasAnyRole(["admin", "manager", "auditor"]);
   return (
     <Tabs defaultValue="matrix" className="space-y-4">
-      <TabsList>
+      <TabsList className="w-full overflow-x-auto justify-start">
         <TabsTrigger value="matrix">สรุปรายเดือน</TabsTrigger>
         <TabsTrigger value="annual">รายงานประจำปี</TabsTrigger>
         {canCompare && <TabsTrigger value="compare">เปรียบเทียบสาขา</TabsTrigger>}
