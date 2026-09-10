@@ -104,12 +104,13 @@ function CapaPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="nc">📋 A. Nonconformity Log</TabsTrigger>
-          <TabsTrigger value="rca">🔍 B. RCA & Plan</TabsTrigger>
-          <TabsTrigger value="kanban">📊 C. Tracking</TabsTrigger>
-          <TabsTrigger value="verify">✅ D. Verification</TabsTrigger>
-          <TabsTrigger value="kb">📁 E. Knowledge Base</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto justify-start md:grid md:grid-cols-5">
+          <TabsTrigger value="nc" className="shrink-0">📋 A. Nonconformity Log</TabsTrigger>
+          <TabsTrigger value="rca" className="shrink-0">🔍 B. RCA & Plan</TabsTrigger>
+          <TabsTrigger value="kanban" className="shrink-0">📊 C. Tracking</TabsTrigger>
+          <TabsTrigger value="verify" className="shrink-0">✅ D. Verification</TabsTrigger>
+          <TabsTrigger value="kb" className="shrink-0">📁 E. Knowledge Base</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="nc" className="mt-4">
