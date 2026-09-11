@@ -18,6 +18,8 @@ import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
 import { sortIndicators } from "@/lib/indicator-sort";
 import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
+import { ExecutiveSummarySection } from "@/components/reports/executive-summary";
+
 
 import { decimalsFor, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
