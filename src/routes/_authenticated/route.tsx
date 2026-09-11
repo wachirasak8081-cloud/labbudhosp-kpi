@@ -6,6 +6,8 @@ import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { FiscalYearProvider } from "@/hooks/use-fiscal-year";
 import { FiscalYearSelector } from "@/components/fiscal-year-selector";
+import { NotificationBell } from "@/components/notification-bell";
+
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
