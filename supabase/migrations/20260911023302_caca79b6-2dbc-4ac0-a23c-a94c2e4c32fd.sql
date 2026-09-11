@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_measurement_events() FROM PUBLIC, anon, authenticated;
