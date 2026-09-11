@@ -55,10 +55,14 @@ export function ExecutiveSummarySection() {
 
     const rows = kpis.map((k) => {
       const avg = value(k);
-      return { ind: k, avg, tone: toneFor(avg, k.target_value, k.target_condition, k.is_inverted) as Tone };
+      return { ind: k, avg, tone: (toneFor(avg, k.target_value, k.target_condition, k.is_inverted) ?? "none") as Tone };
     });
     const counts = { green: 0, yellow: 0, red: 0, none: 0 } as Record<string, number>;
-    rows.forEach((r) => { counts[r.avg == null ? "none" : r.tone] = (counts[r.avg == null ? "none" : r.tone] ?? 0) + 1; });
+    rows.forEach((r) => {
+      const key = r.avg == null ? "none" : String(r.tone);
+      counts[key] = (counts[key] ?? 0) + 1;
+    });
+
     const measured = rows.filter((r) => r.avg != null).length;
     const passRate = measured ? (counts.green / measured) * 100 : 0;
 
