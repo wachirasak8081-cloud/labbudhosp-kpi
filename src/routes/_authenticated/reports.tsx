@@ -18,6 +18,8 @@ import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from "@/lib/indicator-status";
 import { sortIndicators } from "@/lib/indicator-sort";
 import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
+import { ExecutiveSummarySection } from "@/components/reports/executive-summary";
+
 
 import { decimalsFor, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
 import { cn } from "@/lib/utils";
@@ -57,18 +59,21 @@ function ReportsPage() {
   const { hasAnyRole } = useAuth();
   const canCompare = hasAnyRole(["admin", "manager", "auditor"]);
   return (
-    <Tabs defaultValue="matrix" className="space-y-4">
+    <Tabs defaultValue="exec" className="space-y-4">
       <TabsList className="w-full overflow-x-auto justify-start">
+        <TabsTrigger value="exec">สรุปผู้บริหาร</TabsTrigger>
         <TabsTrigger value="matrix">สรุปรายเดือน</TabsTrigger>
         <TabsTrigger value="annual">รายงานประจำปี</TabsTrigger>
         {canCompare && <TabsTrigger value="compare">เปรียบเทียบสาขา</TabsTrigger>}
         <TabsTrigger value="recording">สถานะการบันทึก</TabsTrigger>
       </TabsList>
+      <TabsContent value="exec"><ExecutiveSummarySection /></TabsContent>
       <TabsContent value="matrix"><MatrixSection /></TabsContent>
       <TabsContent value="annual"><AnnualReportSection /></TabsContent>
       {canCompare && <TabsContent value="compare"><CompareSection /></TabsContent>}
       <TabsContent value="recording"><RecordingStatusSection /></TabsContent>
     </Tabs>
+
   );
 }
 

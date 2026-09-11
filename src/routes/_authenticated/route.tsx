@@ -6,6 +6,8 @@ import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { FiscalYearProvider } from "@/hooks/use-fiscal-year";
 import { FiscalYearSelector } from "@/components/fiscal-year-selector";
+import { NotificationBell } from "@/components/notification-bell";
+
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,8 +51,10 @@ function AuthLayout() {
               <div className="text-base font-semibold truncate">{title}</div>
               <div className="ml-auto flex items-center gap-2">
                 <FiscalYearSelector />
+                <NotificationBell />
                 <UserMenu />
               </div>
+
             </header>
             <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-background">
               <Outlet />

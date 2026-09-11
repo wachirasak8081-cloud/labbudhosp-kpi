@@ -12,8 +12,9 @@
 
 
 ## ระยะที่ 3 — ทดสอบ + ความปลอดภัย (ข้อ 2)
-- [ ] Vitest: indicator-calc, indicator-sort, indicator-format, ตรวจไฟล์นำเข้า
-- [ ] Security scan รอบใหม่
+- [x] Vitest: indicator-calc, indicator-sort, indicator-format, ตรวจไฟล์นำเข้า (18 tests)
+- [x] Security scan รอบใหม่ + แก้ 2 คำเตือน (สิทธิ์ดูสาขา, การอัปโหลดไฟล์ CAPA)
+
 
 ## ระยะที่ 4 — แจ้งเตือนอัตโนมัติ (ข้อ 1)
 - [ ] ตาราง notifications + RLS

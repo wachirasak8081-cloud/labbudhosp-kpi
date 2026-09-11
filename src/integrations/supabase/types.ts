@@ -485,6 +485,56 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          fiscal_year: number | null
+          id: string
+          indicator_id: string | null
+          is_read: boolean
+          link: string | null
+          period_month: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          fiscal_year?: number | null
+          id?: string
+          indicator_id?: string | null
+          is_read?: boolean
+          link?: string | null
+          period_month?: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          fiscal_year?: number | null
+          id?: string
+          indicator_id?: string | null
+          is_read?: boolean
+          link?: string | null
+          period_month?: number | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_indicator_id_fkey"
+            columns: ["indicator_id"]
+            isOneToOne: false
+            referencedRelation: "indicators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
