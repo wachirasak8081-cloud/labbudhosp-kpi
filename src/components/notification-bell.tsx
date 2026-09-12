@@ -65,7 +65,8 @@ export function NotificationBell() {
     },
   });
 
-  const unread = unreadCount ?? useMemo(() => (data ?? []).filter((n) => !n.is_read).length, [data]);
+  const localUnread = useMemo(() => (data ?? []).filter((n) => !n.is_read).length, [data]);
+  const unread = unreadCount ?? localUnread;
 
   const markAll = useMutation({
     mutationFn: async () => {
