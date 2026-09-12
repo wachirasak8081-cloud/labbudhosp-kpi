@@ -15,7 +15,7 @@ import { decimalsFor, registerIndicatorDecimals } from "@/lib/indicator-format";
 type Ind = {
   id: string; code: string; name_th: string; level: string; parent_id: string | null;
   target_value: number | null; target_condition: string | null; unit: string | null;
-  is_leaf: boolean; is_inverted: boolean | null;
+  is_leaf: boolean; is_inverted: boolean | null; is_active: boolean; frequency: string | null;
 };
 type Meas = { indicator_id: string; period_month: number | null; calculated_value: number | null };
 
@@ -33,7 +33,7 @@ export function ExecutiveSummarySection() {
       const [{ data: inds }, meas, { data: capa }] = await Promise.all([
         supabase
           .from("indicators")
-          .select("id, code, name_th, level, parent_id, target_value, target_condition, unit, is_leaf, is_inverted, sort_order")
+          .select("id, code, name_th, level, parent_id, target_value, target_condition, unit, is_leaf, is_inverted, is_active, frequency, sort_order")
           .eq("is_active", true).order("sort_order").order("code"),
         fetchAll<Meas>((f, t) =>
           supabase.from("measurements").select("indicator_id, period_month, calculated_value")
