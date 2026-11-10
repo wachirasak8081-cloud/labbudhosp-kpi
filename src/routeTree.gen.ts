@@ -9,30 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedTargetsRouteImport } from './routes/_authenticated/targets'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
-import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedCapaRouteImport } from './routes/_authenticated/capa'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
-import { Route as AuthenticatedIndicatorsIndexRouteImport } from './routes/_authenticated/indicators.index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
+import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedTargetsRouteImport } from './routes/_authenticated/targets'
 import { Route as AuthenticatedDataEntryIndexRouteImport } from './routes/_authenticated/data-entry.index'
-import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
-import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
-import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
-import { Route as AuthenticatedIndicatorsImportRouteImport } from './routes/_authenticated/indicators.import'
-import { Route as AuthenticatedDataEntryImportRouteImport } from './routes/_authenticated/data-entry.import'
 import { Route as AuthenticatedDataEntryHistoryRouteImport } from './routes/_authenticated/data-entry.history'
+import { Route as AuthenticatedDataEntryImportRouteImport } from './routes/_authenticated/data-entry.import'
+import { Route as AuthenticatedIndicatorsIndexRouteImport } from './routes/_authenticated/indicators.index'
+import { Route as AuthenticatedIndicatorsImportRouteImport } from './routes/_authenticated/indicators.import'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings.audit-logs'
+import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
+import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
 import { Route as AuthenticatedDashboardIndicatorIdRouteImport } from './routes/_authenticated/dashboard.indicator.$id'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -40,33 +44,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedTargetsRoute = AuthenticatedTargetsRouteImport.update({
-  id: '/targets',
-  path: '/targets',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIndicatorsRoute = AuthenticatedIndicatorsRouteImport.update({
-  id: '/indicators',
-  path: '/indicators',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDataEntryRoute = AuthenticatedDataEntryRouteImport.update({
-  id: '/data-entry',
-  path: '/data-entry',
+const AuthenticatedCapaRoute = AuthenticatedCapaRouteImport.update({
+  id: '/capa',
+  path: '/capa',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -74,16 +59,43 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCapaRoute = AuthenticatedCapaRouteImport.update({
-  id: '/capa',
-  path: '/capa',
+const AuthenticatedDataEntryRoute = AuthenticatedDataEntryRouteImport.update({
+  id: '/data-entry',
+  path: '/data-entry',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
-    id: '/settings/',
-    path: '/settings/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedIndicatorsRoute = AuthenticatedIndicatorsRouteImport.update({
+  id: '/indicators',
+  path: '/indicators',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTargetsRoute = AuthenticatedTargetsRouteImport.update({
+  id: '/targets',
+  path: '/targets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDataEntryIndexRoute =
+  AuthenticatedDataEntryIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDataEntryRoute,
+  } as any)
+const AuthenticatedDataEntryHistoryRoute =
+  AuthenticatedDataEntryHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedDataEntryRoute,
+  } as any)
+const AuthenticatedDataEntryImportRoute =
+  AuthenticatedDataEntryImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedDataEntryRoute,
   } as any)
 const AuthenticatedIndicatorsIndexRoute =
   AuthenticatedIndicatorsIndexRouteImport.update({
@@ -91,22 +103,16 @@ const AuthenticatedIndicatorsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedIndicatorsRoute,
   } as any)
-const AuthenticatedDataEntryIndexRoute =
-  AuthenticatedDataEntryIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDataEntryRoute,
+const AuthenticatedIndicatorsImportRoute =
+  AuthenticatedIndicatorsImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedIndicatorsRoute,
   } as any)
-const AuthenticatedSettingsUsersRoute =
-  AuthenticatedSettingsUsersRouteImport.update({
-    id: '/settings/users',
-    path: '/settings/users',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsDepartmentsRoute =
-  AuthenticatedSettingsDepartmentsRouteImport.update({
-    id: '/settings/departments',
-    path: '/settings/departments',
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsAuditLogsRoute =
@@ -115,23 +121,17 @@ const AuthenticatedSettingsAuditLogsRoute =
     path: '/settings/audit-logs',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedIndicatorsImportRoute =
-  AuthenticatedIndicatorsImportRouteImport.update({
-    id: '/import',
-    path: '/import',
-    getParentRoute: () => AuthenticatedIndicatorsRoute,
+const AuthenticatedSettingsDepartmentsRoute =
+  AuthenticatedSettingsDepartmentsRouteImport.update({
+    id: '/settings/departments',
+    path: '/settings/departments',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedDataEntryImportRoute =
-  AuthenticatedDataEntryImportRouteImport.update({
-    id: '/import',
-    path: '/import',
-    getParentRoute: () => AuthenticatedDataEntryRoute,
-  } as any)
-const AuthenticatedDataEntryHistoryRoute =
-  AuthenticatedDataEntryHistoryRouteImport.update({
-    id: '/history',
-    path: '/history',
-    getParentRoute: () => AuthenticatedDataEntryRoute,
+const AuthenticatedSettingsUsersRoute =
+  AuthenticatedSettingsUsersRouteImport.update({
+    id: '/settings/users',
+    path: '/settings/users',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDashboardIndicatorIdRoute =
   AuthenticatedDashboardIndicatorIdRouteImport.update({
@@ -277,18 +277,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -298,39 +291,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/targets': {
-      id: '/_authenticated/targets'
-      path: '/targets'
-      fullPath: '/targets'
-      preLoaderRoute: typeof AuthenticatedTargetsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/indicators': {
-      id: '/_authenticated/indicators'
-      path: '/indicators'
-      fullPath: '/indicators'
-      preLoaderRoute: typeof AuthenticatedIndicatorsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/data-entry': {
-      id: '/_authenticated/data-entry'
-      path: '/data-entry'
-      fullPath: '/data-entry'
-      preLoaderRoute: typeof AuthenticatedDataEntryRouteImport
+    '/_authenticated/capa': {
+      id: '/_authenticated/capa'
+      path: '/capa'
+      fullPath: '/capa'
+      preLoaderRoute: typeof AuthenticatedCapaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -340,26 +319,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/capa': {
-      id: '/_authenticated/capa'
-      path: '/capa'
-      fullPath: '/capa'
-      preLoaderRoute: typeof AuthenticatedCapaRouteImport
+    '/_authenticated/data-entry': {
+      id: '/_authenticated/data-entry'
+      path: '/data-entry'
+      fullPath: '/data-entry'
+      preLoaderRoute: typeof AuthenticatedDataEntryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
-      path: '/settings'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+    '/_authenticated/indicators': {
+      id: '/_authenticated/indicators'
+      path: '/indicators'
+      fullPath: '/indicators'
+      preLoaderRoute: typeof AuthenticatedIndicatorsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/indicators/': {
-      id: '/_authenticated/indicators/'
-      path: '/'
-      fullPath: '/indicators/'
-      preLoaderRoute: typeof AuthenticatedIndicatorsIndexRouteImport
-      parentRoute: typeof AuthenticatedIndicatorsRoute
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/targets': {
+      id: '/_authenticated/targets'
+      path: '/targets'
+      fullPath: '/targets'
+      preLoaderRoute: typeof AuthenticatedTargetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/data-entry/': {
       id: '/_authenticated/data-entry/'
@@ -368,18 +354,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDataEntryIndexRouteImport
       parentRoute: typeof AuthenticatedDataEntryRoute
     }
-    '/_authenticated/settings/users': {
-      id: '/_authenticated/settings/users'
-      path: '/settings/users'
-      fullPath: '/settings/users'
-      preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/data-entry/history': {
+      id: '/_authenticated/data-entry/history'
+      path: '/history'
+      fullPath: '/data-entry/history'
+      preLoaderRoute: typeof AuthenticatedDataEntryHistoryRouteImport
+      parentRoute: typeof AuthenticatedDataEntryRoute
     }
-    '/_authenticated/settings/departments': {
-      id: '/_authenticated/settings/departments'
-      path: '/settings/departments'
-      fullPath: '/settings/departments'
-      preLoaderRoute: typeof AuthenticatedSettingsDepartmentsRouteImport
+    '/_authenticated/data-entry/import': {
+      id: '/_authenticated/data-entry/import'
+      path: '/import'
+      fullPath: '/data-entry/import'
+      preLoaderRoute: typeof AuthenticatedDataEntryImportRouteImport
+      parentRoute: typeof AuthenticatedDataEntryRoute
+    }
+    '/_authenticated/indicators/': {
+      id: '/_authenticated/indicators/'
+      path: '/'
+      fullPath: '/indicators/'
+      preLoaderRoute: typeof AuthenticatedIndicatorsIndexRouteImport
+      parentRoute: typeof AuthenticatedIndicatorsRoute
+    }
+    '/_authenticated/indicators/import': {
+      id: '/_authenticated/indicators/import'
+      path: '/import'
+      fullPath: '/indicators/import'
+      preLoaderRoute: typeof AuthenticatedIndicatorsImportRouteImport
+      parentRoute: typeof AuthenticatedIndicatorsRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/audit-logs': {
@@ -389,26 +396,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAuditLogsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/indicators/import': {
-      id: '/_authenticated/indicators/import'
-      path: '/import'
-      fullPath: '/indicators/import'
-      preLoaderRoute: typeof AuthenticatedIndicatorsImportRouteImport
-      parentRoute: typeof AuthenticatedIndicatorsRoute
+    '/_authenticated/settings/departments': {
+      id: '/_authenticated/settings/departments'
+      path: '/settings/departments'
+      fullPath: '/settings/departments'
+      preLoaderRoute: typeof AuthenticatedSettingsDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/data-entry/import': {
-      id: '/_authenticated/data-entry/import'
-      path: '/import'
-      fullPath: '/data-entry/import'
-      preLoaderRoute: typeof AuthenticatedDataEntryImportRouteImport
-      parentRoute: typeof AuthenticatedDataEntryRoute
-    }
-    '/_authenticated/data-entry/history': {
-      id: '/_authenticated/data-entry/history'
-      path: '/history'
-      fullPath: '/data-entry/history'
-      preLoaderRoute: typeof AuthenticatedDataEntryHistoryRouteImport
-      parentRoute: typeof AuthenticatedDataEntryRoute
+    '/_authenticated/settings/users': {
+      id: '/_authenticated/settings/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard/indicator/$id': {
       id: '/_authenticated/dashboard/indicator/$id'
