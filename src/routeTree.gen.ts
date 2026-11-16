@@ -19,6 +19,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedIndicatorsRouteImport } from './routes/_authenticated/indicators'
 import { Route as AuthenticatedInspectionRouteImport } from './routes/_authenticated/inspection'
+import { Route as AuthenticatedManagementReviewRouteImport } from './routes/_authenticated/management-review'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedTargetsRouteImport } from './routes/_authenticated/targets'
 import { Route as AuthenticatedDataEntryIndexRouteImport } from './routes/_authenticated/data-entry.index'
@@ -81,6 +82,12 @@ const AuthenticatedInspectionRoute = AuthenticatedInspectionRouteImport.update({
   path: '/inspection',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManagementReviewRoute =
+  AuthenticatedManagementReviewRouteImport.update({
+    id: '/management-review',
+    path: '/management-review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/data-entry': typeof AuthenticatedDataEntryRouteWithChildren
   '/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/inspection': typeof AuthenticatedInspectionRoute
+  '/management-review': typeof AuthenticatedManagementReviewRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/targets': typeof AuthenticatedTargetsRoute
   '/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
@@ -183,6 +191,7 @@ export interface FileRoutesByTo {
   '/capa': typeof AuthenticatedCapaRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/inspection': typeof AuthenticatedInspectionRoute
+  '/management-review': typeof AuthenticatedManagementReviewRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/targets': typeof AuthenticatedTargetsRoute
   '/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
@@ -208,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRouteWithChildren
   '/_authenticated/indicators': typeof AuthenticatedIndicatorsRouteWithChildren
   '/_authenticated/inspection': typeof AuthenticatedInspectionRoute
+  '/_authenticated/management-review': typeof AuthenticatedManagementReviewRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/targets': typeof AuthenticatedTargetsRoute
   '/_authenticated/data-entry/history': typeof AuthenticatedDataEntryHistoryRoute
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/data-entry'
     | '/indicators'
     | '/inspection'
+    | '/management-review'
     | '/reports'
     | '/targets'
     | '/data-entry/history'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/capa'
     | '/dashboard'
     | '/inspection'
+    | '/management-review'
     | '/reports'
     | '/targets'
     | '/data-entry/history'
@@ -278,6 +290,7 @@ export interface FileRouteTypes {
     | '/_authenticated/data-entry'
     | '/_authenticated/indicators'
     | '/_authenticated/inspection'
+    | '/_authenticated/management-review'
     | '/_authenticated/reports'
     | '/_authenticated/targets'
     | '/_authenticated/data-entry/history'
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/inspection'
       fullPath: '/inspection'
       preLoaderRoute: typeof AuthenticatedInspectionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/management-review': {
+      id: '/_authenticated/management-review'
+      path: '/management-review'
+      fullPath: '/management-review'
+      preLoaderRoute: typeof AuthenticatedManagementReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
@@ -514,6 +534,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRouteWithChildren
   AuthenticatedIndicatorsRoute: typeof AuthenticatedIndicatorsRouteWithChildren
   AuthenticatedInspectionRoute: typeof AuthenticatedInspectionRoute
+  AuthenticatedManagementReviewRoute: typeof AuthenticatedManagementReviewRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedTargetsRoute: typeof AuthenticatedTargetsRoute
   AuthenticatedSettingsAuditLogsRoute: typeof AuthenticatedSettingsAuditLogsRoute
@@ -529,6 +550,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRouteWithChildren,
   AuthenticatedIndicatorsRoute: AuthenticatedIndicatorsRouteWithChildren,
   AuthenticatedInspectionRoute: AuthenticatedInspectionRoute,
+  AuthenticatedManagementReviewRoute: AuthenticatedManagementReviewRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedTargetsRoute: AuthenticatedTargetsRoute,
   AuthenticatedSettingsAuditLogsRoute: AuthenticatedSettingsAuditLogsRoute,

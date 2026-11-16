@@ -1,8 +1,6 @@
-import type { qualityOptions } from "./quality-data";
 import { formatIndicatorValue } from "./indicator-format";
 import { toneFor, statusLabel } from "./indicator-status";
 import { paretoCounts } from "./quality-analysis";
-type QualityData=Awaited<ReturnType<ReturnType<typeof qualityOptions>["queryFn"] & (()=>Promise<never>)>>;
 export async function exportReview(data: {rows:{ind:{code:string;name_th:string;target_value:number|null;target_condition:string|null;is_inverted:boolean;level:string};average:number|null;monthly:(number|null)[]}[];capa:{problem_description:string;root_cause:string|null;action_plan:string;status:string;responsible_person:string|null;effectiveness:string|null}[]},year:number,issues:unknown[][],recommendations:string[]) {
  const XLSX=await import("xlsx"); const workbook=XLSX.utils.book_new();
  const append=(name:string,rows:unknown[][])=>XLSX.utils.book_append_sheet(workbook,XLSX.utils.aoa_to_sheet(rows),name);
