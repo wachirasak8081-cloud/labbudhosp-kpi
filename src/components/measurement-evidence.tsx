@@ -19,7 +19,21 @@ export function MeasurementEvidence({ measurementId, label, readOnly = false, ap
     const {data,error}=await supabase.from("measurement_evidence").select("*").eq("measurement_id",measurementId).order("uploaded_at");
     if(error) throw error; return data??[];
   }});
+  const [linkUrl,setLinkUrl]=useState("");
+  const [linkName,setLinkName]=useState("");
+  const [showLink,setShowLink]=useState(false);
   const refresh=()=>{ void qc.invalidateQueries({queryKey:["evidence"]}); void qc.invalidateQueries({queryKey:["quality"]}); };
+  const addLink=async()=>{
+    if(!user) return;
+    const url=linkUrl.trim();
+    if(!/^https?:\/\/\S+$/i.test(url)){toast.error("กรุณาวางลิงก์ที่ขึ้นต้นด้วย http:// หรือ https://");return;}
+    setBusy(true);
+    try{
+      const {error}=await supabase.from("measurement_evidence").insert({measurement_id:measurementId,file_name:linkName.trim()||url,storage_path:url,mime_type:"link/url",size_bytes:0,uploaded_by:user.id});
+      if(error)throw error;
+      setLinkUrl("");setLinkName("");setShowLink(false);refresh();toast.success("แนบลิงก์เรียบร้อย");
+    }catch(e){toast.error((e as Error).message);}finally{setBusy(false);}
+  };
   const upload=async(file:File)=>{
     if(!user) return;
     const invalid=validateEvidence(file.type,file.size); if(invalid){toast.error(invalid);return;}
