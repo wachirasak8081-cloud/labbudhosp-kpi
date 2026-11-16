@@ -23,9 +23,9 @@ const items: Item[] = [
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
   { title: "ทบทวนเป้าหมาย", url: "/targets", icon: Target, roles: ["admin", "manager", "auditor"] },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
-  { title: "ตรวจประเมินย้อนหลัง", url: "/inspection", icon: ShieldCheck },
-  { title: "วิเคราะห์คุณภาพ", url: "/analysis", icon: ChartNoAxesCombined },
-  { title: "ทบทวนระบบบริหาร", url: "/management-review", icon: BriefcaseBusiness },
+  { title: "ตรวจประเมินย้อนหลัง", url: "/inspection", icon: ShieldCheck, roles: ["admin", "manager"] },
+  { title: "วิเคราะห์คุณภาพ", url: "/analysis", icon: ChartNoAxesCombined, roles: ["admin", "manager"] },
+  { title: "ทบทวนระบบบริหาร", url: "/management-review", icon: BriefcaseBusiness, roles: ["admin", "manager"] },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
 
