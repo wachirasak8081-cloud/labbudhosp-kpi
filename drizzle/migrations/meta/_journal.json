@@ -29,6 +29,13 @@
       "when": 1794802208988,
       "tag": "0003_restrict_reference_reads_to_role_holders",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794804780965,
+      "tag": "0004_allow_link_evidence",
+      "breakpoints": true
     }
   ]
 }
