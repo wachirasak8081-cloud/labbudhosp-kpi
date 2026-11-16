@@ -429,6 +429,47 @@ export type Database = {
           },
         ]
       }
+      measurement_evidence: {
+        Row: {
+          file_name: string
+          id: string
+          measurement_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          id?: string
+          measurement_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Update: {
+          file_name?: string
+          id?: string
+          measurement_id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_evidence_measurement_id_fkey"
+            columns: ["measurement_id"]
+            isOneToOne: false
+            referencedRelation: "measurements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       measurements: {
         Row: {
           approved_by: string | null
