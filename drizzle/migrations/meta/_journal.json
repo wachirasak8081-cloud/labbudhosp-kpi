@@ -43,6 +43,13 @@
       "when": 1794804925465,
       "tag": "0005_link_only_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794805032897,
+      "tag": "0006_bind_evidence_file_reads_to_owner",
+      "breakpoints": true
     }
   ]
 }
