@@ -13,3 +13,4 @@
 - Measurement evidence uses a private bucket and measurement-linked access policies; inspection surfaces never expose mutation controls.
 - Statistical calculations use simple-statistics and I-MR adjacent-month ranges; missing months break both ranges and failure streaks.
 - CAPA escalation is revalidated by an invoker SQL function; monthly deadline reminders run once daily in PostgreSQL with duplicate suppression.
+- Monthly matrix exports reuse displayed recursive results and recorded numerator/denominator values in a dedicated workbook builder; parent averages must not be replaced by aggregated leaf ratios.
