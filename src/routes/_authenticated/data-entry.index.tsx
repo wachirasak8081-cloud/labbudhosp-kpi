@@ -21,6 +21,8 @@ import { MeasurementEvidence } from "@/components/measurement-evidence";
 export const Route = createFileRoute("/_authenticated/data-entry/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "บันทึกข้อมูลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "บันทึกผลการดำเนินงานรายเดือนของตัวชี้วัด พร้อมคำนวณค่าร้อยละและส่งค่าขึ้นสู่ตัวชี้วัดระดับบนอัตโนมัติ" },
       { property: "og:title", content: "บันทึกข้อมูลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

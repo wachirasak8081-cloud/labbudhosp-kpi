@@ -19,6 +19,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/targets")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "ทบทวนเป้าหมายประจำปี — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "ทบทวนและปรับปรุงค่าเป้าหมายของตัวชี้วัดแต่ละรายการในแต่ละปีงบประมาณ พร้อมประวัติการเปลี่ยนแปลงเป้าหมาย" },
       { property: "og:title", content: "ทบทวนเป้าหมายประจำปี — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

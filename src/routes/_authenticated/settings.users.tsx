@@ -18,6 +18,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/settings/users")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "จัดการผู้ใช้งาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "เพิ่ม แก้ไข และกำหนดบทบาทผู้ใช้งานระบบติดตามตัวชี้วัด KPI/QI ของกลุ่มงานเทคนิคการแพทย์" },
       { property: "og:title", content: "จัดการผู้ใช้งาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

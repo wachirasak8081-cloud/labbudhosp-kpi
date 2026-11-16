@@ -16,6 +16,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/settings/departments")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "จัดการสาขางาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "จัดการข้อมูลสาขางานและแผนกภายในกลุ่มงานเทคนิคการแพทย์ โรงพยาบาลพุทธชินราช พิษณุโลก" },
       { property: "og:title", content: "จัดการสาขางาน — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

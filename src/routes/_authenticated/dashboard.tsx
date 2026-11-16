@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "แดชบอร์ดภาพรวม — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "ภาพรวมผลการดำเนินงานตัวชี้วัด KPI/QI รายเดือนและรายปี พร้อมกราฟเปรียบเทียบตามวัตถุประสงค์ทั้ง 4 ด้าน" },
       { property: "og:title", content: "แดชบอร์ดภาพรวม — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

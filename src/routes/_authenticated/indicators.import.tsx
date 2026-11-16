@@ -17,6 +17,8 @@ import {
 export const Route = createFileRoute("/_authenticated/indicators/import")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "นำเข้าตัวชี้วัดจาก Excel — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "นำเข้าโครงสร้างและสูตรคำนวณตัวชี้วัด KPI/QI จากไฟล์ Excel เข้าสู่ระบบติดตามของกลุ่มงานเทคนิคการแพทย์" },
       { property: "og:title", content: "นำเข้าตัวชี้วัดจาก Excel — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

@@ -17,6 +17,8 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/data-entry/history")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "ประวัติการบันทึกข้อมูล — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "ตรวจสอบประวัติการบันทึกและแก้ไขข้อมูลผลการดำเนินงานตัวชี้วัดย้อนหลังของกลุ่มงานเทคนิคการแพทย์" },
       { property: "og:title", content: "ประวัติการบันทึกข้อมูล — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

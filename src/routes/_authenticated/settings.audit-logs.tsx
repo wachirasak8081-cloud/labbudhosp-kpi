@@ -16,6 +16,8 @@ import { Loader2, Eye } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/settings/audit-logs")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "ประวัติการเปลี่ยนแปลง — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "บันทึกการเข้าใช้งานและการแก้ไขข้อมูลทั้งระบบ เพื่อการตรวจสอบย้อนกลับตามมาตรฐานคุณภาพห้องปฏิบัติการ" },
       { property: "og:title", content: "ประวัติการเปลี่ยนแปลง — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

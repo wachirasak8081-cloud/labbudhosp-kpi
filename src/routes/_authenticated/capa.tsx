@@ -29,6 +29,8 @@ import { KanbanTab } from "@/components/capa/kanban-tab";
 export const Route = createFileRoute("/_authenticated/capa")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "แผนแก้ไข CAPA / CQI — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "บันทึกการวิเคราะห์สาเหตุและติดตามการแก้ไขปรับปรุงตามวงจร PDCA ตามข้อกำหนด ISO 15189 ข้อ 8.7 และ 8.8" },
       { property: "og:title", content: "แผนแก้ไข CAPA / CQI — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
