@@ -1,0 +1,15 @@
+CREATE TABLE public.measurement_evidence (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), measurement_id uuid NOT NULL REFERENCES public.measurements(id) ON DELETE CASCADE,
+ file_name text NOT NULL, storage_path text NOT NULL UNIQUE, mime_type text NOT NULL, size_bytes bigint NOT NULL,
+ uploaded_by uuid NOT NULL DEFAULT auth.uid(), uploaded_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, DELETE ON public.measurement_evidence TO authenticated;
+GRANT ALL ON public.measurement_evidence TO service_role;
+ALTER TABLE public.measurement_evidence ENABLE ROW LEVEL SECURITY;
+CREATE POLICY evidence_read ON public.measurement_evidence FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.measurements m WHERE m.id=measurement_id));
+CREATE POLICY evidence_insert ON public.measurement_evidence FOR INSERT TO authenticated WITH CHECK (uploaded_by=auth.uid() AND storage_path LIKE measurement_id::text || '/' || auth.uid()::text || '/%' AND EXISTS (SELECT 1 FROM public.measurements m JOIN public.indicators i ON i.id=m.indicator_id WHERE m.id=measurement_id AND (private.has_role(auth.uid(),'admin') OR (m.status<>'approved' AND (private.has_role(auth.uid(),'manager') OR (private.has_role(auth.uid(),'staff') AND i.department_id=private.current_user_department()))))));
+CREATE POLICY evidence_delete ON public.measurement_evidence FOR DELETE TO authenticated USING (private.has_role(auth.uid(),'admin') OR (uploaded_by=auth.uid() AND NOT private.has_role(auth.uid(),'auditor') AND EXISTS (SELECT 1 FROM public.measurements m WHERE m.id=measurement_id AND m.status<>'approved')));
+CREATE INDEX evidence_measurement_idx ON public.measurement_evidence(measurement_id);
+CREATE POLICY measurement_evidence_storage_read ON storage.objects FOR SELECT TO authenticated USING (bucket_id='measurement-evidence' AND EXISTS (SELECT 1 FROM public.measurements m WHERE m.id::text=(storage.foldername(name))[1]));
+CREATE POLICY measurement_evidence_storage_insert ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id='measurement-evidence' AND (storage.foldername(name))[2]=auth.uid()::text AND EXISTS (SELECT 1 FROM public.measurements m JOIN public.indicators i ON i.id=m.indicator_id WHERE m.id::text=(storage.foldername(name))[1] AND (private.has_role(auth.uid(),'admin') OR (m.status<>'approved' AND (private.has_role(auth.uid(),'manager') OR (private.has_role(auth.uid(),'staff') AND i.department_id=private.current_user_department()))))));
+CREATE POLICY measurement_evidence_storage_delete ON storage.objects FOR DELETE TO authenticated USING (bucket_id='measurement-evidence' AND (private.has_role(auth.uid(),'admin') OR ((storage.foldername(name))[2]=auth.uid()::text AND NOT private.has_role(auth.uid(),'auditor') AND EXISTS (SELECT 1 FROM public.measurements m WHERE m.id::text=(storage.foldername(name))[1] AND m.status<>'approved'))));
