@@ -9,13 +9,16 @@ import { exportReview } from "@/lib/quality-export";
 import { submissionDeadline } from "@/lib/quality-analysis";
 import { toneFor, statusLabel } from "@/lib/indicator-status";
 import { useFiscalYear } from "@/hooks/use-fiscal-year";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { THAI_MONTHS, FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
 import { formatIndicatorValue } from "@/lib/indicator-format";
 import { ParetoChart } from "@/components/quality-charts";
 export const Route=createFileRoute("/_authenticated/management-review")({head:()=>qualityHead("ชุดสรุปทบทวนระบบบริหาร","ผล KPI ประจำปี NC/CAPA ปัญหาการบันทึก และข้อเสนอสำหรับการประชุมทบทวน ISO 15189 ข้อ 8.9"),component:ManagementReview});
 function ManagementReview(){
- const {fiscalYear}=useFiscalYear();const {data}=useSuspenseQuery(qualityOptions(fiscalYear));const [busy,setBusy]=useState(false);
+ const {fiscalYear}=useFiscalYear();const {data}=useSuspenseQuery(qualityOptions(fiscalYear));const {hasAnyRole}=useAuth();const [busy,setBusy]=useState(false);
+ if(!hasAnyRole(["admin","manager"]))return <Card><CardContent className="py-10 text-center text-muted-foreground">เมนูนี้สำหรับผู้ดูแลระบบและผู้จัดการเท่านั้น</CardContent></Card>;
  const kpis=data.rows.filter(r=>r.ind.level==="kpi");const passed=kpis.filter(r=>toneFor(r.average,r.ind.target_value,r.ind.target_condition,r.ind.is_inverted)==="green").length;const open=data.capa.filter(c=>c.status!=="closed");
  const today=new Date();
  const issues=data.rows.filter(r=>r.ind.is_leaf&&r.ind.frequency==="monthly").flatMap(r=>FISCAL_MONTH_TO_CAL.flatMap((m,i)=>{

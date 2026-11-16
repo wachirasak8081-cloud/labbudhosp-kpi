@@ -14,11 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog,DialogContent,DialogHeader,DialogTitle } from "@/components/ui/dialog";
 import { Select,SelectTrigger,SelectValue,SelectContent,SelectItem } from "@/components/ui/select";
 import { THAI_MONTHS,FISCAL_MONTH_TO_CAL } from "@/lib/fiscal-year";
+import { Card,CardContent } from "@/components/ui/card";
 import { formatIndicatorValue } from "@/lib/indicator-format";
 import { analysisScopes, indicatorBranch } from "@/lib/indicator-hierarchy";
 export const Route=createFileRoute("/_authenticated/analysis")({head:()=>qualityHead("วิเคราะห์คุณภาพและแนวโน้ม","Run chart, I-MR control chart, Pareto สาเหตุ NC และเสนอ CAPA หลังไม่ผ่านสามเดือนต่อเนื่อง"),component:Analysis});
 function Analysis(){
  const {fiscalYear}=useFiscalYear();const {data}=useSuspenseQuery(qualityOptions(fiscalYear));const {hasAnyRole}=useAuth();const qc=useQueryClient();
+ if(!hasAnyRole(["admin","manager"]))return <Card><CardContent className="py-10 text-center text-muted-foreground">เมนูนี้สำหรับผู้ดูแลระบบและผู้จัดการเท่านั้น</CardContent></Card>;
  const [id,setId]=useState("");const [mode,setMode]=useState("run");const [group,setGroup]=useState("cause");const [selected,setSelected]=useState<{id:string;month:number;description:string}|null>(null);const [plan,setPlan]=useState("");const [busy,setBusy]=useState(false);
  const [scopeId,setScopeId]=useState("");
  const indicators=data.rows.map(r=>r.ind);
