@@ -19,6 +19,7 @@ import { toneFor, statusLabel, statusBadgeClass, targetSymbol, type Tone } from 
 import { sortIndicators } from "@/lib/indicator-sort";
 import { makeCalcContext, computeMonthly } from "@/lib/indicator-calc";
 import { ExecutiveSummarySection } from "@/components/reports/executive-summary";
+import { buildMatrixWorkbook, downloadMatrixWorkbook } from "@/lib/report-matrix-xlsx";
 
 
 import { decimalsFor, registerIndicatorDecimals, formatTargetValue } from "@/lib/indicator-format";
@@ -48,6 +49,8 @@ type Indicator = {
   id: string; code: string; name_th: string; level: string; parent_id: string | null;
   department_id: string | null; target_value: number | null; target_condition: string | null;
   unit: string | null; is_leaf: boolean; is_inverted: boolean | null;
+  formula_description?: string | null; numerator_description?: string | null;
+  denominator_description?: string | null; formula_link?: string | null;
 };
 type Meas = { indicator_id: string; period_month: number | null; calculated_value: number | null; numerator: number | null; denominator: number | null };
 type Dept = { id: string; name_th: string };
@@ -83,13 +86,14 @@ function ReportsPage() {
 function MatrixSection() {
   const { fiscalYear } = useFiscalYear();
   const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["report-matrix", fiscalYear],
     queryFn: async () => {
       const [{ data: depts }, { data: inds }, { data: meas }] = await Promise.all([
         supabase.from("departments").select("id, name_th").order("name_th"),
-        supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order").eq("is_active", true).order("sort_order").order("code"),
+        fetchAll<Indicator>((f, t) => supabase.from("indicators").select("id, code, name_th, level, parent_id, department_id, target_value, target_condition, unit, is_leaf, is_inverted, frequency, is_active, sort_order, formula_description, numerator_description, denominator_description, formula_link").eq("is_active", true).order("sort_order").order("code").range(f, t)).then(d => ({ data: d })),
         fetchAll<Meas>((f, t) => supabase.from("measurements").select("indicator_id, period_month, calculated_value, numerator, denominator").eq("fiscal_year", fiscalYear).range(f, t)).then((d) => ({ data: d })),
       ]);
       registerIndicatorDecimals((inds ?? []) as Indicator[]);
@@ -117,7 +121,7 @@ function MatrixSection() {
     return inds.map((ind) => {
       const monthly = computeMonthly(ind as never, ctx);
       const monthCells = FISCAL_MONTH_TO_CAL.map((cm, i) => {
-        const m = ind.is_leaf ? data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm) : undefined;
+        const m = data.meas.find((x) => x.indicator_id === ind.id && x.period_month === cm);
         return {
           value: monthly[i],
           numerator: m?.numerator != null ? Number(m.numerator) : null,
@@ -140,24 +144,16 @@ function MatrixSection() {
 
   const fmtNum = (n: number) => n.toLocaleString("en-US");
 
-  const exportCSV = () => {
-    const header = ["รหัส", "ตัวชี้วัด", ...THAI_MONTHS, "เฉลี่ย", "เป้า", "สถานะ"];
-    const lines = [header.join(",")];
-    rows.forEach(({ ind, monthCells, avg, tone }) => {
-      const d = decimalsFor(ind.code);
-      lines.push([
-        ind.code, `"${ind.name_th}"`,
-        ...monthCells.map((c) => c.value == null ? "" : c.value.toFixed(d)),
-        avg != null ? avg.toFixed(d) : "",
-        ind.target_value != null ? `${targetSymbol(ind.target_condition)}${ind.target_value}` : "",
-        statusLabel(tone),
-      ].join(","));
-    });
-    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `KPI-QI-${fiscalYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
+  const exportExcel = async () => {
+    setExporting(true);
+    try {
+      const department = deptFilter === "all" ? "ทุกสาขา" : data?.depts.find(d => d.id === deptFilter)?.name_th ?? "";
+      await downloadMatrixWorkbook(buildMatrixWorkbook(rows, fiscalYear, department), fiscalYear);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "ส่งออก Excel ไม่สำเร็จ");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -177,7 +173,7 @@ function MatrixSection() {
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-300" />ผ่านเกณฑ์</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-300" />ใกล้เกณฑ์ (±2%)</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-rose-100 border border-rose-300" />ต่ำกว่าเกณฑ์</span>
-            <Button onClick={exportCSV} variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />ส่งออก CSV</Button>
+            <Button onClick={exportExcel} disabled={exporting || !data || rows.length === 0} variant="outline" size="sm">{exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}ส่งออก Excel</Button>
           </div>
         </div>
         <div className="overflow-x-auto rounded-md border">
