@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Save, Send, CheckCircle2, History, RefreshCw, ShieldAlert, Unlock, Search, CopyPlus, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { MeasurementEvidence } from "@/components/measurement-evidence";
 
 
 export const Route = createFileRoute("/_authenticated/data-entry/")({
@@ -415,6 +416,7 @@ function DataEntryPage() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <StatusBadge status={m?.status} />
+                            {m && <MeasurementEvidence measurementId={m.id} approved={approved} label={`${ind.code} ${THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(month)]} ${fiscalYear}`} />}
                             {approved && isAdmin && m && (
                               <Button size="sm" variant="ghost" className="h-7 px-2"
                                 title="ปลดล็อกเพื่อแก้ไข"
@@ -486,6 +488,7 @@ function DataEntryPage() {
                       </span>
                       <span className={colorCls}>{formatIndicatorValue(ind.code, display)}</span>
                     </div>
+                    {m && <MeasurementEvidence measurementId={m.id} approved={approved} label={`${ind.code} ${THAI_MONTHS[FISCAL_MONTH_TO_CAL.indexOf(month)]} ${fiscalYear}`} />}
                   </div>
                 );
               })}
