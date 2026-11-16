@@ -8,6 +8,13 @@
       "when": 1794797456292,
       "tag": "0000_monthly_measurement_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794797503621,
+      "tag": "0001_quality_escalation_and_submission_reminders",
+      "breakpoints": true
     }
   ]
 }

@@ -715,6 +715,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_submission_reminders: { Args: never; Returns: number }
+      open_streak_capa: {
+        Args: {
+          p_indicator: string
+          p_month: number
+          p_plan: string
+          p_year: number
+        }
+        Returns: string
+      }
       recompute_parent_measurement: {
         Args: {
           _fiscal_year: number
