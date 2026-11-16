@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, ListTree, ClipboardEdit, AlertTriangle, FileBarChart2,
-  Settings, Target,
+  Settings, Target, ShieldCheck, ChartNoAxesCombined, BriefcaseBusiness,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -23,6 +23,9 @@ const items: Item[] = [
   { title: "CAPA / CQI", url: "/capa", icon: AlertTriangle },
   { title: "ทบทวนเป้าหมาย", url: "/targets", icon: Target, roles: ["admin", "manager", "auditor"] },
   { title: "รายงาน", url: "/reports", icon: FileBarChart2 },
+  { title: "ตรวจประเมินย้อนหลัง", url: "/inspection", icon: ShieldCheck },
+  { title: "วิเคราะห์คุณภาพ", url: "/analysis", icon: ChartNoAxesCombined },
+  { title: "ทบทวนระบบบริหาร", url: "/management-review", icon: BriefcaseBusiness },
   { title: "ตั้งค่า", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
 

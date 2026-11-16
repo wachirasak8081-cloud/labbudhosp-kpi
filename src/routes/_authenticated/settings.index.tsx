@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "ตั้งค่าระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "ตั้งค่าระบบติดตามตัวชี้วัด จัดการผู้ใช้งาน สาขางาน และตรวจสอบประวัติการเปลี่ยนแปลงข้อมูลทั้งระบบ" },
       { property: "og:title", content: "ตั้งค่าระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

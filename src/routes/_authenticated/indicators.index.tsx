@@ -19,6 +19,8 @@ import { exportIndicators } from "@/lib/indicators-xlsx";
 export const Route = createFileRoute("/_authenticated/indicators/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "จัดการตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "จัดการโครงสร้างตัวชี้วัดแบบลำดับชั้น Objective, KPI, QI และ Sub-QI พร้อมสูตรคำนวณและเป้าหมายประจำปี" },
       { property: "og:title", content: "จัดการตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

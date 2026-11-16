@@ -29,6 +29,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "รายงานสรุปผลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "รายงานผลการดำเนินงานตัวชี้วัดรายเดือนและรายงานประจำปี พร้อมกราฟและการส่งออกไฟล์ Excel และ PDF" },
       { property: "og:title", content: "รายงานสรุปผลตัวชี้วัด — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

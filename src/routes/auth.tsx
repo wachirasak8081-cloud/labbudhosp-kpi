@@ -13,6 +13,8 @@ import { FlaskConical, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "เข้าสู่ระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "เข้าสู่ระบบสำหรับเจ้าหน้าที่กลุ่มงานเทคนิคการแพทย์ เพื่อบันทึกข้อมูลและติดตามตัวชี้วัด KPI/QI ของโรงพยาบาลพุทธชินราช" },
       { property: "og:title", content: "เข้าสู่ระบบ — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },

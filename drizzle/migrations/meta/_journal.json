@@ -15,6 +15,13 @@
       "when": 1794797503621,
       "tag": "0001_quality_escalation_and_submission_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794797927930,
+      "tag": "0002_align_automatic_nc_with_three_month_rule",
+      "breakpoints": true
     }
   ]
 }

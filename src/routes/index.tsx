@@ -3,6 +3,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "หน้าแรก — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
       { name: "description", content: "เข้าสู่ระบบติดตามตัวชี้วัด KPI/QI กลุ่มงานเทคนิคการแพทย์ โรงพยาบาลพุทธชินราช พิษณุโลก ดูแดชบอร์ดและรายงานผลการดำเนินงาน" },
       { property: "og:title", content: "หน้าแรก — ระบบติดตาม KPI/QI กลุ่มงานเทคนิคการแพทย์ รพ.พุทธชินราช" },
